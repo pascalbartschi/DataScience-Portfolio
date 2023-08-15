@@ -1,0 +1,144 @@
+---
+title: "Soay Sheep Fitness Analysis"
+author: "Pascal Bärtschi"
+output:
+  html_document:
+    toc: true
+    toc_depth: 5
+output_dir: "../html"
+date: "`r Sys.Date()`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = '../../../')
+```
+
+### Introduction
+
+In this analysis, we will explore the relationship between body size and fitness in Soay sheep using data analysis techniques. We'll load the required libraries, read in the data, and perform relevant statistical tests to understand this relationship. Let's get started!
+
+### Setup
+
+Next, we'll import the necessary libraries for our analysis.
+
+```{r}
+
+suppressPackageStartupMessages({
+  library("ggplot2")
+  library("dplyr")
+  library("ggfortify")
+  library('tidyverse')
+  library('GGally')
+  library('MASS')
+  library('readr')
+  library("PASWR")
+})
+```
+
+### Data Loading and Exploration
+
+We'll load the data from the 'soaysheepfitness.csv' file and gain initial insights into its structure.
+
+```{r}
+data <- read.csv('00-data/soaysheepfitness.csv', stringsAsFactors = T)
+glimpse(data)
+```
+
+### Quick Visualization of Data
+
+Let's visualize the relationship between body size and fitness using scatter plots and smoothed lines.
+
+```{r}
+
+ggplot(data, aes(x = body.size, y = fitness)) +
+  geom_point() + 
+  geom_smooth(method = 'lm', se = FALSE) +
+  geom_smooth(span = 1, color = 'red', se = FALSE) +
+  xlab('Body Mass (kg)') + ylab('Fitness') +
+  theme_bw()
+```
+
+### Linear Regression Analysis
+
+We'll perform a linear regression analysis to understand the relationship between body size and fitness.
+
+```{r}
+
+m1 <- lm(fitness ~ body.size, data)
+summary(m1)
+```
+
+```{r}
+autoplot(m1)
+```
+
+There seems to be a clear relationship between residuals and fit.
+
+### GLM with Poisson Family
+
+Now, let's explore the relationship using a GLM with the Poisson family and log link function.
+
+```{r}
+
+soay.glm <- glm(fitness ~ body.size, data = data, family = poisson(link = log))
+autoplot(soay.glm)
+```
+
+No clear pattern in residuals, slight correlation of scale location plot.
+
+### ANOVA and Deviance
+
+We'll perform ANOVA and examine deviance to assess the model fit.
+
+```{r}
+
+anova(soay.glm, test = 'Chisq')
+summary(soay.glm)
+```
+
+### Prediction and Visualization
+
+Let's predict and visualize the relationship using the GLM.Here, it is especially important to "unlog" all the values to accound for the logit function used.
+
+```{r}
+
+minsize <- min(data$body.size)
+maxsize <- max(data$body.size)
+
+# construct new with expand grid
+new.x <- expand.grid(body.size = seq(minsize, maxsize, length = 1000))
+new.y <- predict(soay.glm, newdata = new.x, se.fit = TRUE)
+new.y <- data.frame(new.y)
+
+addThese <- data.frame(new.x, new.y)
+# here, it is very important to unlog the values with exp()
+addThese <- mutate(addThese,
+                   fitness = exp(fit),
+                   lwr = exp(fit - 1.96 * se.fit),
+                   upr = exp(fit + 1.96 * se.fit))
+
+ggplot(data, aes(x = body.size, y = fitness)) +
+  geom_point(size = 3, alpha = .5) +
+  geom_smooth(data = addThese,
+              aes(ymin = lwr, ymax = upr), stat = 'identity') +
+  theme_bw()
+```
+
+### Maximum Likelihood and GLMs
+
+Let's explore the concept of maximum likelihood and GLMs using the janka dataset.
+
+```{r}
+
+data(janka)
+
+janka.ls1 <- lm(Hardness ~ Density, data = janka)
+janka.ml1 <- glm(Hardness ~ Density, data = janka, family = gaussian(link = 'identity'))
+
+boxcox(janka.ls1)
+``` 
+
+### Conclusion
+
+This analysis provides insights into the relationship between body size and fitness in Soay sheep. We've used linear regression and GLMs to understand this relationship, and the resulting visualizations help in interpreting the findings.

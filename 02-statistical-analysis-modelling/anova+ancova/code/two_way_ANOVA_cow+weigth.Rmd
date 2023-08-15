@@ -1,0 +1,157 @@
+---
+title: "Analyzing Algal Growth and Herbivore Interactions in Intertidal Zones: two way ANOVA"
+author: "Pascal Bärtschi"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 5
+output_dir: "../html"
+date: "`r Sys.Date()`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = '../../../')
+```
+
+This document focuses on the analysis of cow weight gain in response to different diets and supplements. We'll explore the dataset using various data analysis techniques and investigate the effects of diet and supplement on cow weight gain.
+
+### Prerequisites and Data Loading
+
+Let's start by clearing the workspace, importing necessary libraries, and loading the dataset.
+
+```{r}
+suppressPackageStartupMessages({
+  # Importing libraries
+  library("ggplot2")
+  library("dplyr")
+  library("ggfortify")
+  library('tidyverse')
+  library('GGally')
+})
+
+
+# data
+data <- read.csv('00-data/growth.csv', stringsAsFactors = TRUE)
+```
+
+### Data Exploration
+
+We'll begin by gaining an initial overview of the dataset using the `glimpse()` and `summary()` functions. Additionally, we'll explore the levels of the "diet" and "supplement" variables.
+
+```{r}
+glimpse(data)
+```
+
+```{r}
+summary(data)
+```
+
+```{r}
+table(data)
+```
+
+```{r}
+print(levels(data$diet))
+print(levels(data$supplement))
+```
+
+### Data Preparation
+
+To facilitate analysis, we'll set the reference level for "supplement" to "control" and for "diet" to "oats"
+
+```{r}
+data <- mutate(data, supplement = relevel(supplement, ref = 'control'))
+data <- mutate(data, diet = relevel(diet, ref = 'oats'))
+```
+
+### Group Summary
+
+Next, we will calculate the mean and standard deviation for all 12 combinations of "diet" and "supplement".
+
+```{r}
+sumMoo <- data %>%
+  group_by(diet, supplement) %>%
+  summarise(meanGrow = mean(gain), sdGrow = sd(gain))
+
+sumMoo
+```
+
+### Interaction Visualization
+
+Let's visualize the interaction between "supplement" and "mean cow weight gain" for different diets.
+
+```{r}
+ggplot(sumMoo, aes(x = supplement, y = meanGrow, color = diet, group = diet)) +
+  geom_point() +
+  geom_line() +
+  theme_bw()
+```
+
+### Interaction Modeling
+
+We'll use linear regression to model the interaction between "diet" and "supplement" on cow weight gain.
+
+```{r}
+model_moo = lm(gain ~ diet * supplement, data = data)
+```
+
+### Interaction Plot
+
+The `autoplot()` function serves to check skewedness of the data or correlations between fitted values and residuals.
+
+```{r}
+autoplot(model_moo, smooth.colour = NA)
+```
+
+### ANOVA Analysis
+
+Performing ANOVA analysis to assess the significance of interactions.
+
+```{r}
+anova(model_moo)
+```
+
+### Model Summary
+
+Summarizing the linear regression model.
+
+```{r}
+summary(model_moo)
+```
+
+### Adding Standard Error
+
+Calculating standard errors and updating the summary with standard error values.
+
+```{r}
+sumMoo <- data %>%
+  group_by(diet, supplement) %>%
+  summarise(meanGrow = mean(gain), seGrow = sd(gain) / sqrt(n()))
+
+sumMoo
+```
+
+### Interaction Plot with Error Bars
+
+Creating an interaction plot with error bars to show the mean cow weight gain along with the standard errors.
+
+```{r}
+ggplot(sumMoo, aes(x = supplement, y = meanGrow, colour = diet, group = diet)) +
+  geom_point() +
+  geom_line() +
+  geom_errorbar(aes(ymin = meanGrow - seGrow, ymax = meanGrow + seGrow), width = 0.1) +
+  theme_bw()
+```
+
+### Conclusion
+
+In this analysis, we explored the effects of different diets and supplements on cow weight gain. The interaction plot and ANOVA results provided insights into the relationship between these variables and their impact on cow weight gain.
+
+
+
+
+
+
+
+

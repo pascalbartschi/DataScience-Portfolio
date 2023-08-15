@@ -1,2 +1,2 @@
-# data-analysis-concepts
-A collection of algorithms used in the natural sciences to analysize various shapes and froms of data
+# intro_dataanalysis_R
+First experience exploring and analysing data in R.

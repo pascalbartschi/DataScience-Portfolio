@@ -1,0 +1,85 @@
+---
+title: "Prey Analysis in EAGLES"
+author: "Pascal Bärtschi"
+output:
+  html_document:
+    toc: true
+    toc_depth: 5
+output_dir: "../html"
+date: "`r Sys.Date()`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = '../../../')
+```
+
+### Introduction
+
+In this analysis, we will explore prey usage patterns in EAGLES using data analysis techniques. We'll load the required libraries, read in the data, and perform relevant statistical tests to understand the differences in prey consumption between males and females. Let's dive into the details!
+
+First, we'll import the necessary libraries for our analysis.
+
+```{r}
+
+suppressPackageStartupMessages({
+  library("ggplot2")
+  library("dplyr")
+  library("ggfortify")
+  library('tidyverse')
+  library('GGally')
+  library('MASS')
+  library('readr')
+})
+```
+
+### Data Loading and Exploration
+
+We'll load the data from the 'EAGLES.csv' file and 'bodyfat.clean.txt' file and gain initial insights into their structures.
+
+```{r}
+data <- read.csv('00-data/EAGLES.csv')
+# Display data structure
+glimpse(data)
+```
+
+
+### Prey Usage Analysis
+
+We'll analyze the prey usage patterns between males and females. First, we'll calculate the total prey counts by grouping Prey and Sex.
+
+```{r}
+
+total <- data %>%
+  group_by(Prey, Sex) %>%
+  summarize(count = Count)
+```
+
+Now, let's visualize the differences in prey consumption using a grouped bar chart.
+
+```{r}
+
+ggplot(total, aes(x = Prey, y = count, fill = Sex)) +
+  geom_bar(stat = 'identity', position = 'dodge') +
+  theme_bw()
+```
+
+### Chi-Square Test
+
+To determine if there are significant differences in prey consumption between males and females, we'll perform a Chi-Square test.
+
+```{r}
+
+total.mat <- xtabs(count ~ Prey + Sex, data = total)
+chisq_result <- chisq.test(total.mat)
+```
+
+Based on the test results, with a p-value less than 0.05, it seems that there is a statistically significant difference in prey consumption between males and females.
+
+### Interpretation of Findings
+
+The null hypothesis that males and females hunt for the same prey can be rejected with a p-value of 0.027 under 5 degrees of freedom. This indicates a moderate difference in prey usage patterns between males and females. For example, "Patterns of prey usage differed moderately between males and females (χ² = 12.6, df = 5, p = 0.027); for instance, females consumed many waterbirds, whereas males consumed many voles."
+
+### Conclusion
+
+This analysis sheds light on the differences in prey consumption between male and female eagles. The Chi-Square test results indicate a statistically significant difference, further highlighting the distinct prey usage patterns in the two sexes.

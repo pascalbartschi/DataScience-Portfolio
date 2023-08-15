@@ -1,0 +1,147 @@
+---
+title: "Limpet Egg Analysis"
+author: "Your Name"
+output:
+  html_document:
+    toc: true
+    toc_depth: 5
+output_dir: "../html"
+date: "`r Sys.Date()`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = '../../../')
+```
+
+### Introduction
+
+In this analysis, we'll explore the relationships between limpet egg count and factors such as density and season. We'll begin by loading the necessary libraries and importing the dataset. Let's dive in!
+
+```{r}
+# Importing libraries
+suppressPackageStartupMessages({
+  # Importing libraries
+  library("ggplot2")
+  library("dplyr")
+  library("ggfortify")
+  library('tidyverse')
+  library('GGally')
+})
+
+
+# Load data
+# setwd("~/BSc_UZH/UZH_22FS/BIO144/datasets-master")
+data <- read.csv('00-data/limpet.csv', stringsAsFactors = T)
+```
+
+### Data Exploration
+
+We'll start by getting a glimpse of the dataset to understand its structure and contents.
+
+```{r}
+
+glimpse(data)
+```
+
+Next, we'll generate summary statistics to gain insights into the key features of the dataset.
+
+
+```{r}
+
+summary(data)
+```
+
+We'll also create a table to show the distribution of observations based on different factors.
+
+```{r}
+
+table(data)
+```
+
+### Visualizing Relations
+
+Let's visualize the relationship between egg count, density, and season using a scatter plot.
+
+```{r}
+
+ggplot(data, aes(x = DENSITY, y = EGGS, colour = SEASON)) + 
+  geom_point() + 
+  scale_color_manual(values = c(spring = "green", summer = "red")) +
+  theme_bw()
+```
+
+### Model Construction
+
+We'll construct a linear regression model to understand how egg count is influenced by density and season.
+
+```{r}
+
+model_limp <- lm(EGGS ~ DENSITY * SEASON, data = data)
+```
+
+### Model Check and Interpretation
+
+Let's take a closer look at the model and its components.
+
+```{r}
+autoplot(model_limp, smooth.colour = NA)
+```
+
+### ANOVA Table
+
+An analysis of variance (ANOVA) will help us understand the significance of different factors in our model.
+
+```{r}
+
+anova(model_limp)
+```
+
+### Model Summary
+
+The summary of the linear regression model provides important insights into the relationships we're exploring.
+
+```{r}
+
+summary(model_limp)
+```
+
+### Coefficient Table
+
+The coefficients of the model reveal specific impact levels of the factors on egg count.
+
+```{r}
+
+coef(model_limp)
+```
+
+### Predictions and Visualization
+
+We'll use the model to make predictions and visualize the results.
+
+```{r}
+
+new_x <- expand.grid(DENSITY = seq(from = 8, to = 45, length.out = 10),
+                     SEASON = levels(data$SEASON))
+
+predEGG <- predict(model_limp, newdata = new_x, interval = 'confidence')
+
+addThese <- data.frame(new_x, predEGG) 
+addThese <- rename(addThese, EGGS = fit)
+
+EGGatMeanDens <- data.frame(new_x, predEGG)
+EGGatMeanDens <- rename(EGGatMeanDens, EGGS = fit)
+
+ggplot(data, aes(x= DENSITY, y = EGGS, colour = SEASON)) + 
+  geom_point(size = 5) +
+  geom_smooth(data = addThese, 
+              aes(ymin = lwr, ymax = upr, fill = SEASON), stat = 'identity') +
+  scale_color_manual(values = c(spring = 'green', summer = 'red')) +
+  scale_fill_manual(values = c(spring = 'green', summer = 'red')) +
+  theme_bw()
+
+```
+
+### Conclusion and Interpretation
+
+In conclusion, our analysis provides insights into the relationships between egg count, density, and season in limpets. The visualizations and statistical analysis allow us to better understand these dynamics.

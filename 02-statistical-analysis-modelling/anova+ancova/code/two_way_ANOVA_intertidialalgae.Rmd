@@ -1,0 +1,170 @@
+---
+title: "Analyzing Algal Growth and Herbivore Interactions in Intertidal Zones: two way ANOVA"
+author: "Pascal Bärtschi"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 5
+output_dir: "../html"
+date: "`r Sys.Date()`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = '../../../')
+```
+
+
+This document explores the interaction between herbivores and height in relation to algal cover. We will analyze a dataset to uncover potential patterns and relationships using various data analysis techniques.
+
+### Prerequisites and Data Loading
+
+Importing the necessary libraries and loading the data set.
+
+```{r}
+suppressPackageStartupMessages({
+  # Importing libraries
+  library("ggplot2")
+  library("dplyr")
+  library("ggfortify")
+  library('tidyverse')
+  library('GGally')
+})
+
+
+# data
+data <- read.csv("00-data/intertidalalgae.csv", stringsAsFactors = T)  
+```
+
+### Data Exploration
+
+We'll begin by getting an overview of the dataset using the glimpse() and summary() functions. Additionally, we'll examine the levels of the "herbivores" variable.
+
+```{r}
+glimpse(data)
+```
+
+```{r}
+summary(data)
+```
+
+```{r}
+table(data$herbivores)
+```
+
+
+```{r}
+levels(data$herbivores)
+```
+
+### Group Summary
+
+We will group the data by "height" and "herbivores" and calculate summary statistics.
+
+```{r}
+summary_data <- data %>%
+  group_by(height, herbivores) %>%
+  summarise()
+summary_data
+```
+
+### Distribution of Algal Area
+
+Let's visualize the distribution of algal area using a histogram, grouped by "height" and "herbivores".
+
+```{r}
+ggplot(data, aes(x = Area_cm2)) +
+  geom_histogram() +
+  facet_grid(~height ~ herbivores) +
+  theme_bw()
+```
+
+### Interaction Visualization
+
+First, we'll transform the area variable using the square root and update the dataset.
+
+```{r}
+data <- mutate(data, Area_root = sqrt(Area_cm2))
+```
+
+And second, we'll create scatter plots to visualize the interaction between "herbivores" and "height" with respect to the transformed algal area.
+
+```{r}
+ggplot(data, aes(x = height, y = Area_root, color = herbivores)) +
+  geom_point(position = position_jitterdodge(jitter.width = 0.2))
+```
+
+```{r}
+ggplot(data, aes(x = height, y = Area_root, color = herbivores)) +
+  geom_boxplot()
+```
+
+### Summary Statistics of Algal Cover
+
+Compute the summary statistics of algal cover and standard errors.
+```{r}
+summary_algae <- data %>%
+  group_by(height, herbivores) %>%
+  summarise(mean = mean(Area_root), sd = sd(Area_root), se = sd(Area_root) / sqrt(n()))
+
+options(pillar.sigfig = 4)
+summary_algae
+
+```
+
+### Interaction Modeling
+
+We will use linear regression to model the interaction between "herbivores" and "height" on the algal cover.
+
+```{r}
+model_algae <- lm(Area_root ~ herbivores * height, data = data)
+```
+
+The `autoplot()` function serves to check skewedness of the data or correlations between fitted values and residuals.
+
+```{r}
+autoplot(model_algae, smooth.colour = NA)
+```
+
+### ANOVA and Model Summary
+
+We perform ANOVA and summarize the model.
+
+```{r}
+anova(model_algae)
+```
+
+```{r}
+summary(model_algae)
+```
+
+### Confidence Intervals
+
+We calculate confidence intervals for the model coefficients.
+
+```{r}
+conf_intervals <- confint(model_algae, level = 0.95)
+conf_intervals
+```
+
+### Interaction Plot with Confidence Intervals
+
+We create a plot of the interaction along with confidence intervals for interpretation.
+
+```{r}
+
+ggplot(summary_algae, aes(x = height, y = mean,
+                   color = herbivores, group = herbivores)) +
+  geom_point() +
+  geom_line() +
+  geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.1) +
+  ylab(expression("Algal cover - square root cm"^"2")) +
+  xlab('Height') +
+  theme_bw()
+```
+
+### Conclusion
+
+In this analysis, we explored the interaction between herbivores and height with regards to algal cover. The interaction plot and model results provide insights into the relationship between these variables.
+
+

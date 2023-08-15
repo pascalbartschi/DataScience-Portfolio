@@ -1,0 +1,162 @@
+---
+title: "Insecticide Study Analysis"
+author: "Pascal Bärtschi"
+output:
+  html_document:
+    toc: true
+    toc_depth: 5
+output_dir: "../html"
+date: "`r Sys.Date()`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = '../../../')
+```
+
+Introduction
+
+Welcome to the analysis of an insecticide study dataset. In this report, we will delve into the data to explore the relationship between mortality and the dose of insecticides, as well as the effects of different insecticide products. Through statistical techniques and visualization, we aim to gain valuable insights from the data.
+
+### Library Imports
+
+Let's begin by importing the necessary libraries that we'll be using throughout this analysis. These libraries provide the tools we need for data manipulation, visualization, and statistical modeling.
+
+```{r}
+
+suppressPackageStartupMessages({
+  library("ggplot2")
+  library("dplyr")
+  library("ggfortify")
+  library('tidyverse')
+  library('GGally')
+  library('MASS')
+  library('readr')
+})
+```
+
+### Data Loading, Exploration and Preprocessing
+
+Before we delve into the analysis, we need to load the dataset and understand its structure. This initial step is crucial in gaining an overview of the data we'll be working with.
+
+```{r}
+
+# Load the data
+insects <- read.csv('00-data/new_pesticide_study.csv')
+
+# Display the structure of data and levels of 'product'
+glimpse(insects)
+levels(insects$product)
+```
+Next, we compute new measures of the data:
+
+```{r}
+# new frame where trials and dead expressed in success/failure
+insects <- mutate(insects, successes = dead, 
+                  failures = n-dead)
+
+# add success proportion
+insects <- mutate(insects, proportion_success = successes/n)
+```
+
+### Visualizing Mortality and Dose Relationship
+
+To gain an initial understanding of the data, we'll visualize the relationship between mortality and the dose of insecticides. Additionally, we'll examine how different insecticide products influence this relationship.
+
+```{r}
+# Visualize the relationship between mortality and dose of insecticides
+# as well as the effects of different products
+ggplot(insects, aes(x = logdose, y = proportion_success,
+                    colour = product)) +
+  geom_point(size = 3)
+```
+
+### Incorrect Linear Model
+
+Our initial attempt involves fitting a linear model to the data, trying to capture the relationship between mortality and dose. However, this approach might not be the most suitable for the nature of the data.
+
+```{r}
+
+# Fit a linear model (incorrect approach)
+m1 <- lm(proportion_success ~ logdose * product, data = insects)
+autoplot(m1)
+```
+
+### Correct Approach with Binomial Regression
+
+To accurately model the relationship between mortality and dose, we need to consider the binomial distribution of the response variable. This involves using a binomial regression approach that takes into account the binary nature of the data.
+
+```{r}
+
+# Set up the binomial regression model
+glm1 <- glm(cbind(successes, failures) ~ logdose * product,
+            data = insects, family = binomial)
+
+# Diagnostic plot
+autoplot(glm1, smooth.color = NA)
+```
+
+### Deviance and Interaction
+
+Deviance analysis helps us assess the goodness of fit of the model. We'll perform a chi-squared test for interaction terms to evaluate whether the different insecticide products have varying effects on the mortality-dose relationship.
+
+```{r}
+
+# Explore deviance and test for interaction
+anova(glm1, test = 'Chisq')
+```
+
+### Biological Interpretation
+
+Before diving deeper, it's important to interpret the results in a biologically meaningful way. Visualization aids us in understanding the implications of the statistical findings.
+
+```{r}
+
+# Plot for biological interpretation
+ggplot(insects, aes(x = logdose, y = proportion_success,
+                    colour = product)) +
+  geom_point(size = 3)
+```
+
+### Model Summary and Interpretation
+
+A comprehensive model summary helps us understand the key aspects of the binomial regression model we've fitted. This includes coefficients, significance levels, and confidence intervals.
+
+``` {r}
+
+# Model summary and interpretation
+summary(glm1)
+```
+
+### Predictions and Visualization
+
+With the model in place, we can make predictions about the relationship between mortality and dose for different insecticide products. This allows us to visualize the predicted trends and assess the effects of each product.
+
+```{r}
+
+# Create new dataset for predictions
+new_data <- expand.grid(logdose = seq(min(insects$logdose), 
+                                      max(insects$logdose),
+                                      length = 100),
+                        product = unique(insects$product))
+
+# Predict and visualize
+p1 <- predict(glm1, newdata = new_data, se.fit = TRUE,
+              type = 'response')
+n1 <- cbind(new_data, p1)
+
+ggplot(insects, aes(x = logdose, y = proportion_success,
+                    colour = product)) +
+  geom_smooth(data = n1, mapping = aes(x = logdose, y = fit,
+                                       ymin = fit - se.fit,
+                                       ymax = fit + se.fit,
+                                       fill = product),
+              stat = 'identity') +
+  geom_point(size = 3) +
+  xlab('Log Insecticide Concentration') +
+  ylab('Proportion of Insects Dead')
+```
+
+Conclusion
+
+This analysis has provided insights into the relationship between mortality and the dose of insecticides, as well as the varying effects of different insecticide products. By employing proper statistical techniques and visualization methods, we've gained a deeper understanding of the data and its implications.

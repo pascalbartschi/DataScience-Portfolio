@@ -1,0 +1,171 @@
+---
+title: "Ruggedness and GDP Analysis"
+author: "Pascal Bärtschi"
+output:
+  html_document:
+    toc: true
+    toc_depth: 5
+params:
+  output_dir: "../html"
+date: "`r Sys.Date()`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = '../../../')
+
+```
+
+### Introduction
+
+In this analysis, we will investigate the relationship between ruggedness, GDP, and the continent of Africa. We'll explore data transformations, visualizations, and use ANCOVA to determine whether there is a significantly different relationship between GDP and ruggedness in countries within and outside of Africa. Let's get started!
+Clear Brain and Setup
+
+We'll start by loading necessary libraries and importing the data set.
+
+```{r}
+# Importing libraries
+suppressPackageStartupMessages({
+  # Importing libraries
+  library("ggplot2")
+  library("dplyr")
+  library("ggfortify")
+  library('tidyverse')
+  library('GGally')
+})
+
+
+# Load data
+
+data <- read.csv('00-data/rugged.csv', stringsAsFactors = T)
+```
+
+### Data Exploration
+
+Let's begin by visualizing the distribution of the rgd_ppc_2000 variable using a histogram.
+
+```{r}
+
+ggplot(data, aes(x= rgdppc_2000)) +
+  geom_histogram()
+```
+
+To deal with the skewed distribution, we'll apply a logarithmic transformation to the variable.
+
+```{r}
+
+data <- mutate(data, rgd_log10 = log10(rgdppc_2000))
+
+ggplot(data, aes(x= rgd_log10)) +
+  geom_histogram()
+```
+
+### Creating New Variables
+
+We'll create a new categorical variable cont_africa1 based on the conf_africa variable to distinguish between African and non-African countries.
+
+```{r}
+
+data <- mutate(data, cont_africa1 = as.factor(ifelse(data$cont_africa == 1, 'Africa', 'non Africa')))
+# Check distribution of countries
+table(data$cont_africa1)
+```
+
+### Ruggedness and Continent Relationship
+
+Let's explore the distribution of ruggedness and its potential relationship with the continent.
+
+```{r}
+
+ggplot(data, aes(x= rugged)) +
+  geom_histogram()
+```
+
+Next, we'll identify the country with the lowest ruggedness.
+
+```{r}
+
+data %>%
+  arrange(desc(rugged)) %>%
+  select(country)
+```
+
+### Handling Missing Values
+
+We'll remove missing values and create a new dataset for further analysis.
+
+```{r}
+
+sum(is.na(data$rgd_log10))
+datar <- na.omit(select(data, rugged, cont_africa1, rgd_log10))
+
+# Check distribution of continent in the new dataset
+table(datar$cont_africa1)
+```
+
+### Visualizing Relationships
+
+Let's visualize the relationship between ruggedness, log-transformed GDP, and the continent using a scatter plot.
+
+```{r}
+
+ggplot(datar, aes(x = rugged, y = rgd_log10, color = cont_africa1)) +
+  geom_point() + 
+  geom_smooth(method = 'lm')
+```
+
+### ANCOVA Analysis
+
+We'll conduct an ANCOVA analysis to examine the significance of the relationship between GDP and ruggedness, accounting for the effect of the continent.
+
+```{r}
+
+m1 <- lm(rgd_log10 ~ rugged * cont_africa1, data = datar)
+summary(m1)
+autoplot(m1, smooth.colour = NA)
+```
+
+### Distribution of Residuals
+
+Let's visualize the distribution of residuals to assess the assumptions of the ANCOVA model.
+
+```{r}
+
+resid <- residuals(m1)
+
+ggplot(m1, aes(x = residuals(m1))) +
+  geom_histogram(bins = 12)
+```
+
+### Predictions and Visualization
+
+We'll generate predictions using the ANCOVA model and visualize the results.
+
+```{r}
+
+new.x <- expand.grid(rugged = seq(min(datar$rugged), max(datar$rugged), length.out = 170),
+                     cont_africa1 = levels(datar$cont_africa1))
+
+pred_gdp <- predict(m1, newdata = new.x, interval = 'confidence')
+
+addThese_gdp <- data.frame(new.x, pred_gdp)
+addThese_gdp <- rename(addThese_gdp, rgd_log10 = fit)
+
+ggplot(datar, aes(x = rugged, y = rgd_log10, colour = cont_africa1)) +
+  geom_point() +
+  geom_smooth(data = addThese_gdp, aes(ymin = lwr, ymax = upr, fill = cont_africa1),
+              stat = 'identity')
+```
+
+### ANOVA Analysis
+
+Finally, let's perform ANOVA to draw conclusions about the significance of the relationships we've explored.
+
+```{r}
+
+anova(m1)
+```
+
+### Conclusions
+
+In conclusion, our ANCOVA analysis reveals that there is a significantly different relationship between GDP and ruggedness in countries within and outside of Africa (p-value = 0.0032). This implies that the continent has a significant influence on this relationship. These findings provide valuable insights into the interactions between economic and geographical factors.

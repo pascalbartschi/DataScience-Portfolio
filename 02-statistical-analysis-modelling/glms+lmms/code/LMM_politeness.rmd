@@ -1,0 +1,178 @@
+---
+title: "Mixed Effects Model Analysis"
+author: "Your Name"
+output:
+  html_document:
+    toc: true
+    toc_depth: 5
+output_dir: "../html"
+date: "`r Sys.Date()`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = '../../../')
+```
+
+### Introduction
+
+In this document, we will analyze the behavior of mixed effects models using the lme4 library in R. Each section will focus on specific tasks related to mixed effects models, such as model fitting, hypothesis testing, and exploring influential points. Interpretation of function outputs and results will be provided through comments in the code.
+
+```{r}
+
+# Load the lme4 library
+suppressPackageStartupMessages({library(lme4)})
+```
+
+### Data Loading
+
+Let's start by loading the dataset using the read.csv() function. The dataset contains information about politeness data.
+
+```{r}
+
+# Read in the dataset
+politeness <- read.csv("http://www.bodowinter.com/tutorial/politeness_data.csv")
+```
+
+### Exploratory Data Analysis
+
+Before diving into model analysis, let's perform some exploratory data analysis to understand the structure of the dataset.
+
+```{r}
+
+# Display column names
+print(paste0("Colnames:", colnames(politeness)))
+
+# Display summary of data
+print(str(politeness))
+print(summary(politeness))
+```
+
+### Missing Data Handling
+
+We'll address missing values in the dataset using various methods.
+
+```{r}
+
+# Check for missing values and their locations
+which(is.na(politeness$frequency))
+```
+
+```{r}
+# Alternative method to check for missing values
+which(!complete.cases(politeness))
+```
+
+### Relationship Visualization
+
+To explore relationships, we'll create a boxplot to visualize the relationship between frequency, attitude, and gender.
+
+```{r}
+
+# Visualize the relationship using a boxplot
+boxplot(frequency ~ attitude * gender, col = c('white', 'lightgray'), data = politeness)
+```
+
+### Fitting Mixed Effects Models
+
+We'll fit mixed effects models to analyze the relationship between variables.
+
+#### Model 1: Random Effects
+
+Fitting a mixed effects model with random effects for subjects and scenarios.
+
+```{r}
+
+# Fit a mixed effects model with random effects
+lmm1 <- lmer(frequency ~ attitude + (1|subject) + (1|scenario),
+             data = politeness)
+summary(lmm1)
+```
+
+#### Model 2: Including Gender
+
+Fitting a mixed effects model including the gender variable.
+
+```{r}
+
+# Fit a mixed effects model with gender and random effects
+lmm2 <- lmer(frequency ~ attitude + gender + (1|subject) + (1|scenario),
+             data = politeness)
+summary(lmm2)
+```
+
+### Hypothesis Testing
+
+We'll perform hypothesis testing using the anova() function to compare models and assess significance.
+
+```{r}
+
+# Perform hypothesis testing using anova
+null_lmm <- lmer(frequency ~ gender + (1|subject) + (1|scenario),
+                 data = politeness, REML = F)
+
+full_lmm <- lmer(frequency ~ attitude + gender + (1|subject) + (1|scenario),
+                 data = politeness, REML = F)
+
+anova(null_lmm, full_lmm)
+```
+
+### Interaction Effects
+
+We'll investigate interaction effects and their significance using different model configurations.
+
+```{r}
+
+# Testing interaction effects using anova
+full_inter <- lmer(frequency ~ attitude * gender + (1|subject) + (1|scenario),
+                 data = politeness, REML = F)
+
+full_plus <- lmer(frequency ~ attitude + gender + (1|subject) + (1|scenario),
+                 data = politeness, REML = F)
+
+full_1 <- lmer(frequency ~ 1 + (1|subject) + (1|scenario),
+                 data = politeness, REML = F)
+
+anova(full_inter, full_plus, full_1)
+```
+
+### Coefficient Interpretation
+
+Let's explore the coefficients of the model to understand their implications.
+
+```{r}
+
+# Explore the coefficients of the model
+coef(full_lmm)
+```
+
+### Different Slopes Model
+
+We'll analyze a model with different slopes to account for individual variability.
+
+```{r}
+
+# Fit a model with different slopes
+lmm3 <- lmer(frequency ~ attitude + gender + (1+attitude|subject) + (1+attitude|scenario),
+             data = politeness, REML = F)
+coef(lmm3)
+```
+
+### Influential Points
+
+We'll identify influential points using a loop and visualization.
+
+```{r}
+
+# Identify influential points using a loop
+all.res = numeric(nrow(politeness))
+for (i in 1:nrow(politeness)) {
+  myfullmodel = lmer(frequency ~ attitude + (1+attitude|subject), politeness[-i,])
+  all.res[i] = fixef(myfullmodel)[2]
+}
+```
+
+### Conclusion
+
+In this analysis, we delved into mixed effects model analysis using the `lme4` library in R. We covered data loading, exploratory data analysis, missing data handling, model fitting, hypothesis testing, interaction effects, coefficient interpretation, and the identification of influential points. Through these sections, we demonstrated the process of fitting and interpreting mixed effects models for real-world data analysis.
+
