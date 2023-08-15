@@ -1,0 +1,124 @@
+---
+title: "Echocardiogram Analysis"
+author: "Your Name"
+output:
+  html_document:
+    toc: true
+    toc_depth: 5
+output_dir: "../html"
+date: "`r Sys.Date()`"
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = '../../../')
+```
+
+### Importing Libraries
+
+We load the necessary libraries that will be used throughout the analysis.
+
+```{r}
+
+suppressPackageStartupMessages({
+  library("ggplot2")
+  library("dplyr")
+  library("ggfortify")
+  library('tidyverse')
+  library('GGally')
+  library('MASS')
+  library('readr')
+  library('boot')
+})
+```
+
+### Load Data
+
+We import the echocardiogram dataset for our analysis.
+
+```{r}
+
+data <- read.csv('00-data/echocardiogram.csv', na.strings = c('?'))
+```
+
+### Data Overview
+
+Let's take a quick look at the structure of the dataset to understand its variables and content.
+
+```{r}
+glimpse(data)
+```
+
+### Data Cleaning
+
+We perform data cleaning steps to handle missing values and rename columns for clarity.
+
+```{r}
+
+data <- na.omit(data)
+
+names(data) <- c("survival", "still_alive", "age_at_heart_attack", "pericardial_effusion",
+                  "fractional_shortening", "epss",
+                  "lvdd", "wall_motion_score", 
+                  "wall_motion_index", "mult",
+                  "group",
+                  "alive_at_1")
+
+glimpse(data)
+```
+
+### Model Fitting
+
+We fit a logistic regression model to predict survival status based on various echocardiogram measurements.
+
+```{r}
+
+glm1 <- glm(alive_at_1 ~ fractional_shortening +
+              epss +
+              lvdd +
+              wall_motion_index +
+              pericardial_effusion, data = data, family = binomial, na.action = 'na.fail')
+```
+
+### Model Selection
+
+We perform model selection using the dredging technique and select the best-fitting model based on likelihood ratios.
+
+```{r}
+
+model_dredge <- dredge(glm1)
+best_dredge <- get.models(model_dredge, subset = delta == 0)[[1]]
+# Perform Likelihood Ratio Test
+anova(best_dredge, test = 'LRT')
+```
+
+### Model Summary
+
+Here, we provide a summary of the selected model's coefficients and statistical information.
+
+```{r}
+
+summary(best_dredge)
+```
+
+### Visualizing Predictions
+
+We visualize the predicted probabilities of survival based on the wall motion index.
+
+```{r}
+
+ggplot(data, aes(x = wall_motion_index, y = alive_at_1)) +
+  geom_point(position = position_jitter(height = 0.1, width = 0), alpha = 0.5) +
+  stat_smooth(method = "glm", method.args = list(family = "binomial")) +
+  theme_bw()
+```
+
+### ANOVA for Full Model
+
+We conduct an analysis of variance (ANOVA) for the full model to assess the overall significance of predictor variables.
+
+```{r}
+
+anova(glm1, test = 'Chisq')
+```
