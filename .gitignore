@@ -1,0 +1,8 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj
+03-machine-learning
+04-optimzation-simulation
+05-time-series
