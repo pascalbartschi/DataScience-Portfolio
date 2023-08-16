@@ -44,7 +44,7 @@ data <- read.csv('00-data/echocardiogram.csv', na.strings = c('?'))
 
 ### Data Overview
 
-Let's take a quick look at the structure of the dataset to understand its variables and content.
+Let's take a quick look at the structure of the data set to understand its variables and content.
 
 ```{r}
 glimpse(data)
