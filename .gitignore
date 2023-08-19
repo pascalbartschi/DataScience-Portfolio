@@ -3,5 +3,4 @@
 .RData
 .Ruserdata
 *.Rproj
-04-optimization-simulation
-05-time-series
+03-machine-learning/data/cifar-10-python.tar.gz

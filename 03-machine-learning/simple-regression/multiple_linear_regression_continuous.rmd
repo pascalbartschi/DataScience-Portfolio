@@ -1,0 +1,201 @@
+---
+title: "Using multiple linear regression to analyse bodyfat"
+author: "Pascal Bärtschi"
+output:
+  html_document:
+    toc: true
+    toc_depth: 5
+output_dir: "../html"
+date: "`r Sys.Date()`"
+---
+
+```{r setup, include=FALSE}
+# Load necessary libraries
+library(tidyverse)
+library(ggfortify)
+library(GGally)
+```
+
+### Data Import and Preprocessing
+
+```{r}
+
+# Load data
+dd <- read_delim('00-data/bodyfat.txt', '\t', escape_double = FALSE, trim_ws = TRUE, show_col_types = FALSE)
+
+# Select only three columns
+dd <- select(dd, bodyfat, weight, abdomen)
+```
+
+### Distribution Overview
+
+```{r}
+
+# Plot histograms of each variable
+ggplot(dd) + 
+  geom_histogram(aes(x = bodyfat))
+  
+ggplot(dd) + 
+  geom_histogram(aes(x = weight))
+  
+ggplot(dd) + 
+  geom_histogram(aes(x = abdomen))
+```
+
+The histograms show the distribution of the bodyfat, weight, and abdomen variables.
+
+### Exploratory Data Analysis
+
+```{r}
+
+# Visualize pairwise relationships
+ggpairs(dd)
+
+# Linear Regression Model
+m1 <- lm(bodyfat ~ weight + abdomen, data = dd)
+```
+
+The pairwise scatterplots provide insights into the relationships between the variables. We then build a linear regression model (m1) to predict bodyfat using weight and abdomen as explanatory variables.
+
+```{r}
+
+# Visualize residuals
+autoplot(m1)
+
+# Summary of the model
+summary(m1)
+```
+
+The scatterplot of residuals helps us assess the model's assumptions. The summary provides information about the coefficients and statistical significance of the model.
+
+```{r}
+
+# Confidence intervals for coefficients
+confint(m1)
+```
+
+The confidence intervals for the model coefficients provide insights into the precision of the estimates.
+
+### Model Validation
+
+```{r}
+
+# Predicted values and residuals
+predicted_values <- predict(m1)
+fitted_values <- fitted(m1)
+
+# Visualize predicted vs. actual values
+ggplot(data.frame(predicted = predicted_values, actual = dd$bodyfat), 
+       aes(x = actual, y = predicted)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(x = "Actual Bodyfat", y = "Predicted Bodyfat")
+```
+
+We validate the model by plotting predicted versus actual values. The scatterplot and regression line help us assess the model's predictive performance.
+
+### Model Improvement
+
+```{r}
+
+# Generate new data for visualization
+new_data <- expand.grid(weight = mean(dd$weight),
+                        abdomen = seq(min(dd$abdomen), max(dd$abdomen), length = 100))
+
+# Predictions with new data
+predictions <- predict(m1, newdata = new_data, interval = 'confidence')
+predictions_df <- cbind(new_data, predictions)
+
+# Visualize predicted bodyfat vs. abdomen
+ggplot(predictions_df) + 
+  geom_line(aes(x = abdomen, y = fit)) +
+  geom_smooth(mapping = aes(x = abdomen, y = fit, ymin = lwr, ymax = upr),
+              stat = 'identity') +
+  geom_point(data = dd, aes(x = abdomen, y = bodyfat))
+```
+
+We improve the model by generating new data for visualization and predicting bodyfat values based on abdomen and weight measurements, which both seems to be accurate predictors of bodyfat
+
+### Model Comparison and Interpretation
+
+```{r}
+
+# Create models for comparison
+m_both <- lm(bodyfat ~ weight + abdomen, data = dd)
+m_weight <- lm(bodyfat ~ weight, data = dd)
+m_abdomen <- lm(bodyfat ~ abdomen, data = dd)
+
+# Calculate adjusted R-squared values
+r2both <- summary(m_both)$adj.r.squared
+r2weight <- summary(m_weight)$adj.r.squared
+r2abdomen <- summary(m_abdomen)$adj.r.squared
+
+# Calculate unique variance for each variable
+r2_ua <- r2both - r2weight
+r2_uw <- r2both - r2abdomen
+
+# Calculate shared explanatory power
+r2_shared <- r2both - r2_ua - r2_uw
+
+r2 <- c(r2_ua, r2_uw, r2_shared)
+names(r2) <- c("abdomen only", "weight only", "shared")
+print(r2)
+```
+
+We compare three models (m_both, m_weight, and m_abdomen) to understand the individual and shared explanatory power of weight and abdomen on bodyfat. We see that weight exlaines the least variance in the data.
+
+### Variable Scaling and Interpretation
+
+```{r}
+
+# Mutate variables for scaling
+dd <- mutate(dd, scaled_abdomen = scale(abdomen), scaled_weight = scale(weight))
+
+# Build model with scaled variables
+m_scaled <- lm(bodyfat ~ scaled_abdomen + scaled_weight, data = dd)
+
+# Compare scaled model with original model
+summary(m_scaled)
+summary(m_both)
+```
+
+We standardize variables to prevent misinterpretations due to different scales and build a model (m_scaled) using scaled variables.
+
+### Broom Package for Model Summaries
+
+```{r}
+
+# Use broom package for model summaries
+library(broom)
+tidy(m_scaled)
+augment(m_scaled)
+glance(m_scaled)
+```
+
+The broom package provides convenient functions (tidy, augment, glance) to extract useful information from the model.
+
+### Visualizing Model Coefficients
+
+```{r}
+
+# Mutate additional variables for scaling
+dd <- mutate(dd, scaled_wrist = scale(wrist), scaled_ankle = scale(ankle), 
+             scaled_height = scale(height))
+
+# Build model with additional scaled variables
+m <- lm(bodyfat ~ scaled_height + scaled_ankle + scaled_wrist + scaled_abdomen + scaled_weight, data = dd)
+
+# Extract coefficient information
+td <- tidy(m, conf.int = TRUE)
+
+# Visualize coefficients
+ggplot(td, aes(estimate, term)) +
+  geom_point() +
+  geom_errorbar(mapping = aes(xmin = conf.low, xmax = conf.high), width = 0.1 )
+```
+
+We visualize the coefficients of the model using scatterplots with error bars.
+
+### Conclusion
+
+In this analysis, we performed exploratory data analysis, built linear regression models, improved model fit, and compared different models to understand the relationship between bodyfat, weight, and abdomen. We explored various aspects of regression analysis and model interpretation to gain insights into the variables' influence on body fat percentages.

@@ -1,0 +1,182 @@
+---
+title: "Using multiple linear regression to analyse bodyfat"
+author: "Pascal Bärtschi"
+output:
+  html_document:
+    toc: true
+    toc_depth: 5
+output_dir: "../html"
+date: "`r Sys.Date()`"
+---
+# Earthworm Analysis
+
+```{r setup, include=FALSE}
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+library(ggfortify)
+library(tidyverse)
+library(GGally)
+```
+
+### Data Import and Preprocessing
+
+```{r}
+
+# Load data
+data <- read.csv('00-data/earthworm.csv', stringsAsFactors = TRUE)
+```
+
+### Exploratory Data Analysis
+
+```{r}
+
+# Summary statistics
+summary(data)
+
+# Unique values
+unique(data)
+
+# Frequency table of 'Gattung'
+table(data$Gattung)
+```
+
+We start by importing the data and performing initial exploratory data analysis.
+
+```{r}
+
+# Histogram of 'Gewicht'
+ggplot(data, aes(x = Gewicht)) +
+  geom_histogram()
+```
+
+The histogram of 'Gewicht' variable shows this distribution.
+
+```{r}
+
+# Log transformation of 'Gewicht'
+data <- mutate(data, log10_Gewicht = log10(Gewicht))
+
+# Histogram of log-transformed 'Gewicht'
+ggplot(data, aes(x = log10_Gewicht)) +
+  geom_histogram(bins = 20)
+```
+
+We apply a log transformation to 'Gewicht' for less skewed distribution.
+
+```{r}
+
+# Scatterplot of 'Magenumf' vs. 'Gewicht'
+ggplot(data, aes(x = Magenumf, y = Gewicht)) +
+  geom_point()
+```
+
+The scatterplot of 'Magenumf' against 'Gewicht' shows a non-linear relationship.
+
+```{r}
+
+# Scatterplot of 'Magenumf' vs. log-transformed 'Gewicht'
+ggplot(data, aes(x = Magenumf, y = log10_Gewicht)) +
+  geom_point()
+```
+
+The scatterplot with the log-transformed 'Gewicht' shows a stronger linear relationship.
+
+### Linear Regression
+
+```{r}
+
+# Linear regression model
+m1 <- lm(log10_Gewicht ~ Magenumf, data)
+```
+
+We build a linear regression model (m1) to predict log-transformed 'Gewicht' using 'Magenumf'.
+
+```{r}
+
+# Visualization of the model
+autoplot(m1)
+summary(m1)
+```
+
+We visualize the model and provide a summary. We see that the residuals seem randomly distributed, as well as the data is not skewed (QQ)
+
+```{r}
+
+# Scatterplot with linear regression line
+ggplot(data, aes(x = Magenumf, y = log10_Gewicht)) +
+  geom_point() + 
+  geom_smooth(method = 'lm') +
+  xlab('Gut Circumference [mm]') +
+  ylab('Worm Weight [g]')
+```
+
+The scatterplot with the linear regression line visualizes the relationship between 'Magenumf' and log-transformed 'Gewicht'.
+
+### Comparison Among Genera
+
+```{r}
+
+# Scatterplot of 'Gattung' vs. log-transformed 'Gewicht'
+ggplot(data, aes(x = Gattung, y = log10_Gewicht)) +
+  geom_point() + 
+  geom_boxplot()
+```
+
+We compare log-transformed 'Gewicht' among different genera using scatterplots and boxplots.
+
+```{r}
+
+# Linear model with 'Gattung' as explanatory variable
+m2 <- lm(log10_Gewicht ~ Gattung, data)
+autoplot(m2)
+summary(m2)
+anova(m2)
+```
+
+We build a linear model (m2) using 'Gattung' as an explanatory variable and provide its summary and ANOVA results. We see that `Gattung` seems to be important in explanatory power, thus the type of worm is important for prediction.
+
+### Multiple Explanatory Variables
+
+```{r}
+
+# Scatterplot with color-coded 'Gattung'
+ggplot(data, aes(x = Magenumf, y = log10_Gewicht, colour = Gattung)) +
+  geom_point()
+```
+
+We visualize the relationship between 'Magenumf' and log-transformed 'Gewicht', color-coded by 'Gattung'.
+
+```{r}
+
+# Multiple variable linear regression model
+m3 <- lm(log10_Gewicht ~ Magenumf + Gattung, data)
+autoplot(m3)
+summary(m3)
+```
+
+We build a linear regression model (m3) using both 'Magenumf' and 'Gattung' as explanatory variables and provide its summary. This model enables 3 intercepts for each worm but only one slope.
+
+```{r}
+
+# Linear regression model with interaction effects
+m4 <- lm(log10_Gewicht ~ Magenumf * Gattung, data)
+autoplot(m4)
+summary(m4)
+```
+
+We build a model (m4) that includes interaction effects between 'Magenumf' and 'Gattung' and provide its summary. This enables independent slopes of the categories as visualized below: 
+
+### Visualization of Model Results
+
+```{r}
+
+# Scatterplot with color-coded 'Gattung' and linear regression lines
+ggplot(data, aes(x = Magenumf, y = log10_Gewicht, colour = Gattung)) +
+  geom_point() + 
+  geom_smooth(method = 'lm') +
+  xlab('Gut Circumference [mm]') +
+  ylab('Worm Weight [g]')
+```
+
+The scatterplot with color-coded 'Gattung' and linear regression lines with indpendent slopes visually summarizes the model results.
