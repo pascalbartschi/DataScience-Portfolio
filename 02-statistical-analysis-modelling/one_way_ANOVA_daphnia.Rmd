@@ -11,7 +11,6 @@ date: "`r Sys.Date()`"
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_knit$set(root.dir = '../../../')
 ```
 
 
@@ -30,7 +29,7 @@ suppressPackageStartupMessages({
 })
 
 # load data
-data <- read.csv("00-data/Daphniagrowth.csv", stringsAsFactors = TRUE)
+data <- read.csv("data/Daphniagrowth.csv", stringsAsFactors = TRUE)
 
 ```
 

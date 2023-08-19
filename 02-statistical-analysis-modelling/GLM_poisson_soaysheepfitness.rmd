@@ -11,7 +11,6 @@ date: "`r Sys.Date()`"
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_knit$set(root.dir = '../../../')
 ```
 
 ### Introduction
@@ -41,7 +40,7 @@ suppressPackageStartupMessages({
 We'll load the data from the 'soaysheepfitness.csv' file and gain initial insights into its structure.
 
 ```{r}
-data <- read.csv('00-data/soaysheepfitness.csv', stringsAsFactors = T)
+data <- read.csv('data/SoaySheepFitness.csv', stringsAsFactors = T)
 glimpse(data)
 ```
 

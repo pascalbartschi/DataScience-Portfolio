@@ -11,7 +11,6 @@ date: "`r Sys.Date()`"
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_knit$set(root.dir = '../../../')
 ```
 
 ### Introduction
@@ -32,7 +31,7 @@ suppressPackageStartupMessages({
 
 # Load data
 # setwd("~/BSc_UZH/UZH_22FS/BIO144/datasets-master")
-data <- read.csv('00-data/limpet.csv', stringsAsFactors = T)
+data <- read.csv('data/limpet.csv', stringsAsFactors = T)
 ```
 
 ### Data Exploration

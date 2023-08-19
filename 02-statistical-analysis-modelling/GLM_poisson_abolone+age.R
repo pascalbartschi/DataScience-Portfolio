@@ -13,16 +13,11 @@ library('readr')
 library('MuMIn')
 
 # load data
-
-setwd("~/BSc_UZH/UZH_22FS/BIO144/all_datasets_144")
-# setwd("~/BSc_UZH/UZH_22FS/BIO144/datasets-master")
 data <- read.csv('abalone_age.csv', stringsAsFactors = T)
-# dd <- read_delim('bodyfat.clean.txt')
 
 glimpse(data)
 
 # distribution of response v Rings
-
 ggplot(data = data, mapping = aes(x=Rings)) +
   geom_histogram()
 

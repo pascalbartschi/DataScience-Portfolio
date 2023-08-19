@@ -17,8 +17,6 @@ knitr::opts_knit$set(root.dir = '../../../')
 ### Introduction
 
 In this analysis, we will explore prey usage patterns in EAGLES using data analysis techniques. We'll load the required libraries, read in the data, and perform relevant statistical tests to understand the differences in prey consumption between males and females. Let's dive into the details!
-Clear Brain and Setup
-
 
 First, we'll import the necessary libraries for our analysis.
 
@@ -32,7 +30,6 @@ suppressPackageStartupMessages({
   library('GGally')
   library('MASS')
   library('readr')
-  library('MuMIn')
 })
 ```
 

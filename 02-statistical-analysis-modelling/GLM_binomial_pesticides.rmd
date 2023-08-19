@@ -11,7 +11,6 @@ date: "`r Sys.Date()`"
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_knit$set(root.dir = '../../../')
 ```
 
 Introduction
@@ -42,7 +41,7 @@ Before we delve into the analysis, we need to load the dataset and understand it
 ```{r}
 
 # Load the data
-insects <- read.csv('00-data/new_pesticide_study.csv')
+insects <- read.csv('data/new_pesticide_study.csv')
 
 # Display the structure of data and levels of 'product'
 glimpse(insects)

@@ -13,11 +13,7 @@ library('readr')
 library('MuMIn')
 
 # load data
-
-setwd("~/BSc_UZH/UZH_22FS/BIO144/all_datasets_144")
-setwd("~/BSc_UZH/UZH_22FS/BIO144/datasets-master")
-
-dd <- read.csv('bodyfat.csv', stringsAsFactors = T)
+dd <- read.csv('bodyfat.txt', stringsAsFactors = T)
 dd <- read_delim('bodyfat.clean.txt')
 
 
