@@ -21,7 +21,7 @@ library(GGally)
 ```{r}
 
 # Load data
-dd <- read_delim('00-data/bodyfat.txt', '\t', escape_double = FALSE, trim_ws = TRUE, show_col_types = FALSE)
+dd <- read_delim('data/bodyfat.txt', '\t', escape_double = FALSE, trim_ws = TRUE, show_col_types = FALSE)
 
 # Select only three columns
 dd <- select(dd, bodyfat, weight, abdomen)

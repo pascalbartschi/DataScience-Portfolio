@@ -24,7 +24,7 @@ library(GGally)
 ```{r}
 
 # Load data
-data <- read.csv('00-data/earthworm.csv', stringsAsFactors = TRUE)
+data <- read.csv('data/earthworm.csv', stringsAsFactors = TRUE)
 ```
 
 ### Exploratory Data Analysis
