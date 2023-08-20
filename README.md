@@ -12,6 +12,6 @@ I collected scipts containing concepts and approaches to analysise data in diver
    - Regression
    - Model selection
 
-### Process
+### Directions
 
-Only 01 and 02 are appropriately documeneted, the other directories are not finished yet and need further structuring and cleaning...
+01 and 02 are appropriately documeneted, 03 is in development and I'm still integrating files from other problem I solved
