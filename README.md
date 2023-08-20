@@ -3,9 +3,15 @@ I collected scipts containing concepts and approaches to analysise data in diver
 
 ### About
 
-* 01-data-exploration:
-* 02-statistical-analysis-modelling:
+* 01-Exploratory-Data-Analysis: quick and dirty analysis of data finding simple relationships, distributions or missing values in data
+* 02-Statistical-Analysis: Covers the following approaches to analyse pattern and relationships in data:
+   - AN(C)OVA
+   - Probability Distributions
+   - Regression
+   - Uncertainty
+   - Regression
+   - Model selection
 
 ### Process
 
-Only 01 and 02 are appriartely documeneted, the other directories are not finished yet and need further structuring and cleaning...
+Only 01 and 02 are appropriately documeneted, the other directories are not finished yet and need further structuring and cleaning...
