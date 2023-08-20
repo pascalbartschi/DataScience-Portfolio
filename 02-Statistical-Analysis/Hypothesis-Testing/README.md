@@ -1,6 +1,6 @@
 # Hypothesis Testing
 
-This directory contain script analyises of Variance and Covariance, as well as with the Chi-Squared Testing
+This directory contain script analyses of Variance and Covariance, as well as with the Chi-Squared Testing
 
 ## Contents
 
