@@ -1,17 +1,17 @@
 ---
 title: "Analyzing Algal Growth and Herbivore Interactions in Intertidal Zones: two way ANOVA"
 author: "Pascal Bärtschi"
-output: 
+output:
   html_document:
+    theme: simplex
     toc: true
+    toc_float: true
     toc_depth: 5
-output_dir: "../html"
 date: "`r Sys.Date()`"
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_knit$set(root.dir = '../../../')
 ```
 
 

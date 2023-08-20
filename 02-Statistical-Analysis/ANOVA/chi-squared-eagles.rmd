@@ -1,9 +1,11 @@
 ---
-title: "Prey Analysis in EAGLES"
+title: "Prey Usage Analysis of Eagles"
 author: "Pascal Bärtschi"
 output:
   html_document:
+    theme: simplex
     toc: true
+    toc_float: true
     toc_depth: 5
 output_dir: "../html"
 date: "`r Sys.Date()`"
@@ -11,7 +13,6 @@ date: "`r Sys.Date()`"
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_knit$set(root.dir = '../../../')
 ```
 
 ### Introduction
@@ -38,7 +39,7 @@ suppressPackageStartupMessages({
 We'll load the data from the 'EAGLES.csv' file and 'bodyfat.clean.txt' file and gain initial insights into their structures.
 
 ```{r}
-data <- read.csv('00-data/EAGLES.csv')
+data <- read.csv('data/EAGLES.CSV')
 # Display data structure
 glimpse(data)
 ```

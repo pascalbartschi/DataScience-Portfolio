@@ -1,9 +1,11 @@
 ---
-title: "Analyzing Algal Growth and Herbivore Interactions in Intertidal Zones: two way ANOVA"
+title: "Analyzing Algal Growth and Herbivore Interactions in Intertidal Zones"
 author: "Pascal Bärtschi"
-output: 
+output:
   html_document:
+    theme: simplex
     toc: true
+    toc_float: true
     toc_depth: 5
 output_dir: "../html"
 date: "`r Sys.Date()`"
@@ -11,7 +13,6 @@ date: "`r Sys.Date()`"
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_knit$set(root.dir = '../../../')
 ```
 
 This document focuses on the analysis of cow weight gain in response to different diets and supplements. We'll explore the dataset using various data analysis techniques and investigate the effects of diet and supplement on cow weight gain.

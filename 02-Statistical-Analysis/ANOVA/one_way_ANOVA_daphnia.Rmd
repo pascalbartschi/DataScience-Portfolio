@@ -1,11 +1,12 @@
 ---
-title: "Analyzing Daphnia Growth and Parasitism: Uncovering Relationships with one way ANOVA"
+title: "Analyzing Daphnia Growth and Parasitism"
 author: "Pascal Bärtschi"
-output: 
+output:
   html_document:
+    theme: simplex
     toc: true
+    toc_float: true
     toc_depth: 5
-output_dir: "../html"
 date: "`r Sys.Date()`"
 ---
 
@@ -13,12 +14,15 @@ date: "`r Sys.Date()`"
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-
+### Introduction
 
 This code explores the relationship between Daphnia growth and parasitism using data analysis techniques. Daphnia, tiny aquatic organisms, are indicators of ecosystem health. We delve into a dataset called "Daphniagrowth.csv" to investigate potential associations between growth rate and the presence of parasites.
 
-#### Prerequisites and data loading
-```{r include = FALSE}
+### Prerequisites and Data Loading
+
+Let's start by clearing the workspace, importing necessary libraries, and loading the dataset.
+
+```{r}
 suppressPackageStartupMessages({
   # Importing libraries
   library("ggplot2")
@@ -34,7 +38,7 @@ data <- read.csv("data/Daphniagrowth.csv", stringsAsFactors = TRUE)
 ```
 
 
-#### Data Exploration
+### Data Exploration
 
 We begin by loading the data set and gaining initial insights using `glimpse()` and `summary()`. We also create a distribution of parasite occurrences with the `table()` function.
 
@@ -52,7 +56,7 @@ summary(data)
 table(data$parasite)
 ```
 
-#### Visual Insight
+### Visual Insight
 
 Visualizations play a vital role. We use ggplot2 to create a box and whisker plot, showing growth rate distribution across parasite groups. Flipping the axes clarifies the view.
 
@@ -65,7 +69,7 @@ ggplot(data, aes(x = parasite, y = growth.rate)) +
 ```
 
 
-#### Modeling the Connection
+### Modeling the Connection
 
 Linear regression is employed to model growth rates based on parasitism. The model, named model_grow, estimates growth variations among parasite groups.
 
@@ -75,7 +79,7 @@ model_grow = lm(growth.rate ~ parasite, data = data)
 
 
 
-#### Model Visualization
+### Model Visualization
 
 The `autoplot()` function serves to check skewedness of the data or correlations between fitted values and residuals.
 
@@ -84,7 +88,7 @@ autoplot(model_grow, smooth.color = NA)
 ```
 The data is a bit skewed (Q-Q) but seem ok, however we need to note that the standardized residuals show tiny correlation (Scale-Location) with the fit.
 
-#### Statistical Analysis
+### Statistical Analysis
 
 We perform ANOVA using `anova()` to assess if parasite groups lead to distinct growth rates. The F-value informs us about between-group versus within-group variance.
 
@@ -104,7 +108,7 @@ summary(model_grow)
 The intercept is representative for the control group. Thus, we estimate of growth of p.r: 0.6, p.p: 1.05, m.b: 0.85
 on estimated 36 degrees of freedom with this linear model.
 
-#### Group Comparisons
+### Group Comparisons
 
 Using `summarise()`, we compute mean growth rates for each parasite group. The results are visualized alongside individual data points, offering a comprehensive growth rate trend overview.
 
@@ -120,7 +124,7 @@ sumDat
 
 
 
-#### ANOVA visualization: grouped means of growth by parasite
+### ANOVA visualization: grouped means of growth by parasite
 
 ```{r}
 ggplot() +
@@ -130,7 +134,8 @@ ggplot() +
   coord_flip()
 
 ```
-#### Conclusion
+
+### Conclusion
 
 This ANOVA analysis unravels that there is a relationship between parasite and growth rate of daphnia, indicated by the relatively high F-value and the p-value close to zero.
 
