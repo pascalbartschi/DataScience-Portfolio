@@ -1,12 +1,11 @@
-### Concepts in data analysis 
-I collected scipts containing concepts and approaches to analysise data in diverse ways and developed them to be better documented and more presentable. The idea is to one day narrow this code further down to have put together a portfolio. This will be a part of it together with other 
+### Description
+I collected scipts containing concepts and approaches to analysise data in diverse ways and developed them to be better documented and more presentable. The idea is to one day narrow this code further down to have put together a portfolio. 
 
-### Directories
+### About
 
-* 00-data: mostly dataframes to analyse
-* 01-data-exploration: 
-* 02-statistical-analysis-modelling: 
-* 03-machine-learning: 
-* 04-numerical-optimmization:
+* 01-data-exploration:
+* 02-statistical-analysis-modelling:
 
---> readme files for all directories will be uploaded soon, maybe also a wiki :)
+### Process
+
+Only 01 and 02 are appriartely documeneted, the other directories are not finished yet and need further structuring and cleaning...
