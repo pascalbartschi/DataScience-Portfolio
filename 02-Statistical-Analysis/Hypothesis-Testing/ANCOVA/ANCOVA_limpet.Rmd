@@ -1,11 +1,12 @@
 ---
 title: "Limpet Egg Analysis"
-author: "Your Name"
+author: "Pascal Bärtschi"
 output:
   html_document:
+    theme: simplex
     toc: true
+    toc_float: true
     toc_depth: 5
-output_dir: "../html"
 date: "`r Sys.Date()`"
 ---
 
@@ -49,13 +50,6 @@ Next, we'll generate summary statistics to gain insights into the key features o
 ```{r}
 
 summary(data)
-```
-
-We'll also create a table to show the distribution of observations based on different factors.
-
-```{r}
-
-table(data)
 ```
 
 ### Visualizing Relations
