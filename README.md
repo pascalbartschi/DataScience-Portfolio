@@ -3,9 +3,9 @@ I collected scipts containing concepts and approaches to analysise data in diver
 
 ### About
 
-* 01-Exploratory-Data-Analysis: quick and dirty analysis of data finding simple relationships, distributions or missing values in data
-* 02-Statistical-Analysis: Covers the following approaches to analyse pattern and relationships in data:
-   - AN(C)OVA
+* [01-Exploratory-Data-Analysis](01-Exploratory-Data-Analysis/): quick and dirty analysis of data finding simple relationships, distributions or missing values in data
+* [02-Statistical-Analysis](02-Statistical-Analysis): Covers the following approaches to analyse pattern and relationships in data:
+   - [Hypothesis-Testing](02-Statistical-Analysis/Hypothesis-Testing)
    - Probability Distributions
    - Regression
    - Uncertainty
