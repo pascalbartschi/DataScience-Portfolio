@@ -3,5 +3,6 @@
 .RData
 .Ruserdata
 *.Rproj
+02-Statistical-Analysis/Probability+Likelihood/bayes_theorem.ipynb
 03-machine-learning/data/cifar-10-python.tar.gz
 00-data
