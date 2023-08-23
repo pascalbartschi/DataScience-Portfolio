@@ -3,9 +3,10 @@ title: "Using multiple linear regression to analyse bodyfat"
 author: "Pascal Bärtschi"
 output:
   html_document:
+    theme: simplex
     toc: true
+    toc_float: true
     toc_depth: 5
-output_dir: "../html"
 date: "`r Sys.Date()`"
 ---
 
@@ -30,16 +31,12 @@ dd <- select(dd, bodyfat, weight, abdomen)
 ### Distribution Overview
 
 ```{r}
-
 # Plot histograms of each variable
-ggplot(dd) + 
-  geom_histogram(aes(x = bodyfat))
-  
-ggplot(dd) + 
-  geom_histogram(aes(x = weight))
-  
-ggplot(dd) + 
-  geom_histogram(aes(x = abdomen))
+dd %>% 
+  gather(key = "measurement", value = "value") %>% 
+  ggplot() + 
+  geom_histogram(aes(x = value)) + 
+  facet_wrap(~measurement, scales = "free")
 ```
 
 The histograms show the distribution of the bodyfat, weight, and abdomen variables.
@@ -119,7 +116,20 @@ We improve the model by generating new data for visualization and predicting bod
 ### Model Comparison and Interpretation
 
 ```{r}
+# Reload to get more data
+dd <- read_delim('data/bodyfat.txt', '\t', escape_double = FALSE, trim_ws = TRUE, show_col_types = FALSE)
+# Select only  columns
+dd <- select(dd, bodyfat, weight, abdomen, ankle, wrist, height)
 
+dd %>% 
+  gather(key = "measurement", value = "value") %>% 
+  ggplot() + 
+  geom_histogram(aes(x = value)) + 
+  facet_wrap(~measurement, scales = "free")
+```
+
+
+```{r}
 # Create models for comparison
 m_both <- lm(bodyfat ~ weight + abdomen, data = dd)
 m_weight <- lm(bodyfat ~ weight, data = dd)

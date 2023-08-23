@@ -3,9 +3,10 @@ title: "Mixed Effects Model Analysis"
 author: "Your Name"
 output:
   html_document:
+    theme: simplex
     toc: true
+    toc_float: true
     toc_depth: 5
-output_dir: "../html"
 date: "`r Sys.Date()`"
 ---
 

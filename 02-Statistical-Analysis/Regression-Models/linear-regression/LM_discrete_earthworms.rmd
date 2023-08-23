@@ -1,14 +1,15 @@
 ---
-title: "Using multiple linear regression to analyse bodyfat"
+title: "Using multiple linear regression to analyse earthworm physique"
 author: "Pascal Bärtschi"
 output:
   html_document:
+    theme: simplex
     toc: true
+    toc_float: true
     toc_depth: 5
-output_dir: "../html"
 date: "`r Sys.Date()`"
 ---
-# Earthworm Analysis
+### Library import
 
 ```{r setup, include=FALSE}
 # Load necessary libraries
@@ -35,7 +36,7 @@ data <- read.csv('data/earthworm.csv', stringsAsFactors = TRUE)
 summary(data)
 
 # Unique values
-unique(data)
+unique(data) %>% head(5)
 
 # Frequency table of 'Gattung'
 table(data$Gattung)
