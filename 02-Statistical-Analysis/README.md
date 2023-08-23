@@ -1,4 +1,4 @@
-# 02-Statistical-Analysis
+# Description
 
 Welcome to the "02-Statistical-Analysis" section! In this section, you will find a collection of scripts and resources related to various statistical analysis approaches used in data analysis. I tried to cover a wide range of topics and techniques without being to exhaustive.
 
