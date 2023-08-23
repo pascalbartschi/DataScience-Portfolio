@@ -13,3 +13,6 @@ Here you can find analysis using various regression approaches such as linear an
   - [LM_dicrete_earthworm.rmd](linear-regression/LM_dicrete_earthworm.rmd) finds different relationships between distinguished earthworm species of weight with gut circumference.
   - [LM_continuous_bodyfat.rmd](linear-regression/LM_continuous_bodyfat.rmd) explores which features of human physique can predict bodyfat.
   - [outlier-leverage.ipynb](liner-regression/outlie-leverage.ipynb) simplistic search for outliers and leverage point and how to handle them accordingly
+* [Model Selection](model-selection): Performing model selection of linear model (lm) in R according to AIC.
+  - [predicitve_model_of_bodyfat.R](model-selection/predicitve_model_of_bodyfat.R): manual model selection by stepwise dropping of explanatory variables according to AIC to obtain optimal model to predict bodyfat.
+  -[model-dredge-echocardiogram.rmd](model-selection/model-dredge-echocardiogram.rmd): automated model selection with the `dredge` function from the "MuMIn" package to predict the probability to survide heart attacks

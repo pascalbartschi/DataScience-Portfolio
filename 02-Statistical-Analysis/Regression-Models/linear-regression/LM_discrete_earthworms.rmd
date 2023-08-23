@@ -13,11 +13,12 @@ date: "`r Sys.Date()`"
 
 ```{r setup, include=FALSE}
 # Load necessary libraries
-library(ggplot2)
-library(dplyr)
-library(ggfortify)
-library(tidyverse)
-library(GGally)
+suppressPackageStartupMessages({library(ggplot2)
+                         library(dplyr)
+                         library(ggfortify)
+                         library(tidyverse)
+                          library(GGally)
+})
 ```
 
 ### Data Import and Preprocessing
