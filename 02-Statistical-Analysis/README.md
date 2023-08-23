@@ -4,8 +4,7 @@ Welcome to the "02-Statistical-Analysis" section! In this section, you will find
 
 ## Contents
 
-- [Hypothesis-Testing](Hypothesis-Testing/): Includes Analysis of Variance ([ANOVA](Hypothesis-Testing/ANCOVA/)), Analysis of Covariance ([ANCOVA])(Hypothesis-Testing/ANCOVA/) and [Chi-Squared Testing](Hypothesis-Testing/Chi-Squared/)
+- [Hypothesis-Testing](Hypothesis-Testing/): Includes Analysis of Variance ([ANOVA](Hypothesis-Testing/ANCOVA/)), Analysis of Covariance ([ANCOVA](Hypothesis-Testing/ANCOVA/)) and [Chi-Squared Testing](Hypothesis-Testing/Chi-Squared/)
 - [Probaility and Likelihood](Probability+Likelihood/): Explore scripts that deal with various probability distributions commonly used in statistical analysis.
-- [Regression](Regression/): Discover scripts for performing regression analysis to model relationships between variables.
+- [Regression Model](Regression-Models/): Discover scripts performing regression analysis to model relationships between variables with [linear and multiple regression](Regression-Models/linear-regression), [GLMS or LMMs](Regression-Models/glm+lmm) and optimzinhg anaylsis with [model selection](Regression-Models/model-selection)
 - [Uncertainty](Uncertainty/): Learn about uncertainty analysis and how to quantify and manage uncertainty in your data.
-- [Model Selection](Model-Selection/): Explore methods for selecting the most appropriate models for your data.
