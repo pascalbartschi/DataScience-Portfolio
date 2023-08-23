@@ -12,4 +12,4 @@ I collected scipts containing concepts and approaches to analysise data in diver
 
 ### Directions
 
-01 and 02 are appropriately documeneted, 03 is in development and I'm still integrating files from other problem I solved
+01 and 02 are appropriately documeneted, 03 is in development and I'm still integrating files from other problems I solved
