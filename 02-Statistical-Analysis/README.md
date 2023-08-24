@@ -7,4 +7,5 @@ Welcome to the "02-Statistical-Analysis" section! In this section, you will find
 - [Hypothesis-Testing](Hypothesis-Testing/): Includes Analysis of Variance ([ANOVA](Hypothesis-Testing/ANOVA/)), Analysis of Covariance ([ANCOVA](Hypothesis-Testing/ANCOVA/)) and [Chi-Squared Testing](Hypothesis-Testing/Chi-Squared/)
 - [Probaility and Likelihood](Probability+Likelihood/): Explore scripts that deal with various probability distributions commonly used in statistical analysis, as well as the self implemented MLE approach to fit parameters.
 - [Regression Model](Regression-Models/): Discover scripts performing regression analysis to model relationships between variables with [linear and multiple regression](Regression-Models/linear-regression), [GLMS or LMMs](Regression-Models/glm+lmm) and optimzinhg anaylsis with [model selection](Regression-Models/model-selection)
-- [Uncertainty](Uncertainty/): Learn about uncertainty analysis and how to quantify and manage uncertainty in your data.
+- [Time Series](Time-Series/):  A script analysing components and stationarity of time series data of air travel.
+- [Uncertainty Analysis](Uncertainty-Analysis/): Learn about how to handle uncertainty in [fitting](Uncertainty-Analysis/LS_fitting_respecting_uncertainty.ipynb) or [error propagation](Uncertainty-Analysis/error-propagation.ipynb).
