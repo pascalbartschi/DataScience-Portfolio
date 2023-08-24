@@ -1,5 +1,5 @@
 ### Description
-I collected scipts containing concepts and approaches to analysise data in diverse ways and developed them to be better documented and more presentable. The idea is to one day narrow this code further down to have put together a portfolio. 
+I collected scripts containing concepts and approaches to analysise data in diverse ways and developed them to be better documented and more presentable. The idea is to one day narrow this code further down to have put together a portfolio.
 
 ### About
 
@@ -10,7 +10,10 @@ I collected scipts containing concepts and approaches to analysise data in diver
   - [Regression Model](02-Statistical-Analysis/Regression-Models/): Discover scripts performing regression analysis to model relationships between variables with [linear and multiple regression](02-Statistical-Analysis/Regression-Models/linear-regression), [GLMS or LMMs](02-Statistical-Analysis/Regression-Models/glm+lmm) and optimzinhg anaylsis with [model selection](02-Statistical-Analysis/Regression-Models/model-selection)
   - [Time Series](02-Statistical-Analysis/Time-Series/):  A script analysing components and stationarity of time series data of air travel.
   - [Uncertainty Analysis](02-Statistical-Analysis/Uncertainty-Analysis/): Learn about how to handle uncertainty in [fitting](02-Statistical-Analysis/Uncertainty-Analysis/LS_fitting_respecting_uncertainty.ipynb) or [error propagation](02-Statistical-Analysis/Uncertainty-Analysis/error-propagation.ipynb).
+* [03-Machine-Learning](03-Machine-Learning):Represents my experience in analysing data with ML by:
+  - [Supervised Learning](03-Machine-Learning/Supervised): Discover scripts using [Deep Learning](03-Machine-Learning/Supervised/DL-image-classification.ipynb) and other classification approaches like [KNN, SVM](03-Machine-Learning/Supervised/KNN+SVM-classification-IRIS.ipynb) or [BDT](03-Machine-Learning/Supervised/multivariate-signal-classification.ipynb).
+  - [Unsupervised Learning](dummy) In development...
 
 ### Directions
 
-01 and 02 are appropriately documeneted, 03 is in development and I'm still integrating files from other problems I solved
+I'm currently documenting further analyses for the directory Machine Learning.
