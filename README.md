@@ -1,5 +1,5 @@
 ## Description
-I collected scripts containing concepts and approaches to analysise data in diverse ways and developed them to be better documented and more presentable. The idea is to one day narrow this code further down to have put together a portfolio.
+This is a collection of code containing concepts and approaches to analysise data in diverse ways. The goal is to represent my expertise in data sience and support my CV with showcasing the experience I list. I hope you enjoy to skim through section that catch the glimpse of your eye!
 
 ## About
 
