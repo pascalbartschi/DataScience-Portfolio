@@ -12,7 +12,7 @@ In this notebook we explore the basic functions of the cobra library and common 
 
 Here, we analyse the E-coli core metabolism. We0 used data from the research of [Orth et al, 2010](https://pubmed.ncbi.nlm.nih.gov/26443778/) and available in the [BiGG database](http://bigg.ucsd.edu/models/e_coli_core). You can find a graphical description of the model in this picture:
 
-We analyses the relationship between the use of different carbon sources and biomass production
+We analyse the relationship between the use of different carbon sources and biomass production
 
 ### [Biomass growth in genome scale network](genome-scale-network-analysis.ipynb)
 
