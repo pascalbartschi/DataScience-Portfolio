@@ -17,6 +17,7 @@ We analyses the relationship between the use of different carbon sources and bio
 ### [Biomass growth in genome scale network](genome-scale-network-analysis.ipynb)
 
 In this analysis we try to identify the molecular components of a cell (protein, DNA, RNA, lipids) whose precursors need the greatest amounts of resources for their synthesis. Different networks were prepared with different growth objectives, either missing a major component or only focusing on one.
+
 We focus on analysing output of molecular components in different modified networks. The highlight of this analysis is the classification of essential reactions into subsystems of compartment use.
 
 ### [E. coli iJO1366 analysis](ecoli_iJO1366_analysis.ipynb)
