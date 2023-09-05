@@ -1,6 +1,6 @@
 # About
 
-This directory hold network analyses of metabolic network with the python library *conda*. It summarizes what approaches I learnt to perform with this library.
+This directory contains network analyses of metabolic networks with the python library *conda*. Networks were analyzed with tools like Flux Balance Analysis or Flux Variance Analysis to find active or essential reactions in various environmental conditions. For example, minimal environments of glucose versus acetate minimal environments often dispay different flux in networks as the pathways change with resource limitations.
 
 # Contents
 
