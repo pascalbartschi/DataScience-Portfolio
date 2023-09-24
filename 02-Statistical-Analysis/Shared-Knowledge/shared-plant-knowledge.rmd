@@ -1,0 +1,780 @@
+---
+title: "Shared plant knowledge in a camp "
+author: "Pascal Bärtschi"
+output:
+  html_document:
+    theme: simplex
+    toc: true
+    toc_float: true
+    toc_depth: 5
+date: "`r Sys.Date()`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+In this markdown, we will analyze shared plant knowledge among a group of individuals. We have two main datasets: one containing information about plant knowledge and another containing information about the participants. Our goal is to understand the factors that influence shared plant knowledge within dyads (pairs of participants). The data was taken from the research of [Salali et al. (2020)](https://osf.io/udwzr/).
+
+
+# Loading Data and Libraries
+
+We begin by loading the necessary R libraries and the datasets containing our data. We'll load the required packages for data wrangling, visualization, and modeling.
+
+```{r}
+# Load required libraries
+suppressPackageStartupMessages({library(tidyverse) # For data wrangling
+                                library(ggplot2)# For data visualization
+                                library(lme4) # For mixed-effects models
+  })
+```
+
+```{r}
+# Load the plant knowledge dataset
+know <- read.csv("plant_knowledge.csv")
+
+# Load the participants dataset
+people <- read.csv("plant_participants.csv")
+
+# Rename the ID entry
+names(know)[1] <- "ID"
+names(people)[1] <- "ID"
+```
+
+# Exploratory Data Analysis
+## Plant Knowledge Dataset
+### Dataset Dimensions
+
+Let's start by exploring the dimensions of our plant knowledge dataset. This will help us understand how many subjects and plants are included in our analysis.
+
+```{r}
+
+# Number of subjects in the dataset
+print(paste("Subjects: ", nrow(know)))
+
+# Number of plants in the dataset
+print(paste("Plants: ", ncol(know) - 1))
+```
+
+### Sum of Knowledge by Plant
+
+Next, we'll calculate the sum of plant knowledge across all participants for each plant species. This will give us insights into which plants are known by a larger number of people.
+
+```{r}
+
+# Create a data frame with the sum of knowledge for each plant
+frame_know_plant <- data.frame(know_count = sort(colSums(know[,-1]), decreasing = TRUE))
+
+# Print the data frame
+print(frame_know_plant)
+
+# Calculate and print the average plant knowledge
+print(paste("Plant knowledge avg:", mean(frame_know_plant$know_count)))
+
+# Identify plants known by over 200 people
+print("Plants known by over 200 people:")
+print(rownames(frame_know_plant %>% filter(know_count > 200)))
+
+# Create a bar plot to visualize the distribution of people knowing certain plants
+barplot(frame_know_plant$know_count, 
+        main = "Distribution of people knowing certain plants",
+        xlab = "Plant")
+```
+
+## Plant Participants Dataset
+### Age Distribution
+
+Let's explore the age distribution of the participants.
+
+```{r}
+
+# Create a table of age counts
+age_counts <- table(people$age)
+
+# Print the table
+print(age_counts)
+```
+
+### Fraction of Pre-adults
+
+We'll calculate the fraction of pre-adult participants (ages 5-10 and 10-15) among all participants.
+
+```{r}
+
+# Count of participants aged 5-10 or 10-15
+count_pre_20 <- people %>% filter(age == "05-10" | age == "10-15") %>% nrow()
+
+# Calculate and print the fraction of pre-adults
+print(count_pre_20 / nrow(people))
+```
+
+### Sex Ratio
+
+Let's calculate the sex ratio among the participants.
+
+```{r}
+
+# Count of male participants
+count_males <- people %>% filter(sex == "M") %>% nrow()
+
+# Count of female participants
+count_females <- people %>% filter(sex == "F") %>% nrow()
+
+# Calculate and print the sex ratio (Males / Females)
+print(paste("Sex ratio M/F:", count_males / count_females))
+```
+
+# Data wrangling: merge files to create dyad dataframe
+
+We will create dyads by combining participants from the participants dataset and then merge the dyads with plant knowledge information. The idea is to analyse the shared knowledge of two people and see whether shared knowledge shows a relationship with with dyadic:
+
+* sex
+* age
+* birthplace
+* or camp
+
+First we merge the two dataframes as follows:
+
+```{r}
+
+# Create dyads by combining participants
+dyads <- data.frame(t(combn(people$ID, 2)))
+
+# Calculate the number of possible dyads
+no_dyads <- length(people$ID) * (length(people$ID) - 1) / 2
+
+# Calculate the number of plant species
+no_plants <- ncol(know) - 1
+
+# Add dyad names and rename columns
+dyads$dyad_ID <- paste(dyads$X1, dyads$X2, sep = "_")
+colnames(dyads) <- c("ID1", "ID2", "dyad_ID")
+
+# Merge dyads with participant information
+dyads_people <- merge(dyads, people, by.x = "ID2", by.y = "ID")
+dyads_people <- merge(dyads_people, people, by.x = "ID1", by.y = "ID")
+
+# Create a variable to represent dyad sex (combination of sex of participants)
+dyads_people$dyadsex <- paste0(pmin(dyads_people$sex.x, dyads_people$sex.y),
+                               pmax(dyads_people$sex.x, dyads_people$sex.y))
+
+# Create a variable to represent if dyads have the same sex
+dyads_people$samesex <- ifelse(dyads_people$dyadsex == "FM", 1, 0)
+
+# Switch from wide to long format for plant knowledge data
+know <- know %>% gather("plant", "know", -ID)
+
+# Merge dyads with plant knowledge data
+dyads_merged <- merge(dyads_people, know, by.x = "ID1", by.y = "ID")
+dyads_merged <- merge(dyads_merged, know, by.x = c("ID2", "plant"), by.y = c("ID", "plant"))
+
+# Check if the dimensions of the merged data frame are as expected
+print(paste("Check dimension of frame:", nrow(dyads_merged) == no_dyads * no_plants))
+
+# Reorder columns and rename them for clarity
+dyads_merged <- dyads_merged %>% 
+  select(c(3, 1, 4, 5, 11, 6, 12, 18, 17, 7, 13, 8, 14, 9, 15, 2, 19, 20, 10, 16)) %>%
+  rename_with(~gsub(".x","1", .x, fixed = TRUE)) %>%
+  rename_with(~gsub(".y","2", .x, fixed = TRUE))
+
+# Check the df
+dyads_merged %>% head()
+```
+
+# Exploration of dyad levels
+
+First, we explore the dyad dataset and calculate fractions of these level to get a sense for the distribution of the dataframe.
+
+## Sex
+
+```{r}
+
+# Create a table of dyad sex counts (excluding NANA)
+dyad_sex_counts <- table((dyads_merged %>% filter(dyadsex != "NANA"))$dyadsex) / no_plants
+
+# Print the table
+print(dyad_sex_counts)
+```
+
+## Age
+
+### Young Dyads
+
+Now, we'll analyze the fraction of young dyads (both participants are either 5-10 or 10-15 years old).
+
+```{r}
+
+# Count of young dyads
+no_young <- dyads_merged %>% 
+  filter((age1 == "05-10" & age2 == "05-10") | 
+         (age1 == "05-10" & age2 == "10-15") |
+         (age1 == "10-15" & age2 == "05-10") |
+         (age1 == "10-15" & age2 == "10-15")) %>%
+  nrow()
+
+# Calculate and print the fraction of young dyads
+print(no_young / no_plants)
+```
+
+### Old Dyads
+
+Next, we'll analyze the fraction of old dyads (both participants are 60-80 years old).
+
+```{r}
+
+# Count of old dyads
+no_old <- dyads_merged %>% 
+  filter(age1 == "60-80" & age2 == "60-80") %>%
+  nrow()
+
+# Calculate and print the fraction of old dyads
+print(no_old / no_plants)
+```
+
+## Birthplace 
+
+Here, we find out how many dyads were born in the same place vs. not
+
+```{r}
+# account for NAs!
+dyads_merged$sameborn <- ifelse(dyads_merged$born1 == dyads_merged$born2 & 
+                                  !is.na(dyads_merged$born1) & 
+                                  !is.na(dyads_merged$born2), 1, 0)
+
+dyads_merged$diffborn <- ifelse(dyads_merged$born1 != dyads_merged$born2 &  
+                                  !is.na(dyads_merged$born1) & 
+                                  !is.na(dyads_merged$born2), 1, 0)
+# omit nas otherwise na comparison
+print(paste("Born in same camp:", sum(dyads_merged$sameborn) / 33))
+print(paste("Born in different camp:", sum(dyads_merged$diffborn) / 33))
+```
+
+## Camp
+
+Here, we find out how many dyads live in the same camp vs. not
+
+```{r}
+samecamp <- ifelse(dyads_merged$camp1 == dyads_merged$camp2 & 
+                    !is.na(dyads_merged$camp1) & 
+                    !is.na(dyads_merged$camp2), 1, 0)
+
+diffcamp <- ifelse(dyads_merged$camp1 != dyads_merged$camp2 &  
+                    !is.na(dyads_merged$camp1) & 
+                    !is.na(dyads_merged$camp2), 1, 0)
+# omit nas otherwise na comparison
+print(paste("Interviewed in same camp", sum(samecamp) / 33))
+print(paste("Interviewed in different camp", sum(diffcamp) / 33))
+```
+
+
+# Hypothesis testing
+
+Assuming (incorrectly) that the data points (rows) are independent, we can define ‘total score’ as the sum of shared knowledge (from 0 to number of plants) by each dyad. Here, we use hypothesis testing to find out whether total plant knowledge differs between dyadic:
+* age
+* sex
+* camp
+
+First, add a column to assess whether the knowledge of a plant is shared.
+```{r}
+dyads_merged$dyadknow <- ifelse(dyads_merged$know1 == 1 & dyads_merged$know2 == 1, 1, 0)
+```
+
+## Age
+
+### Analysis
+
+First, we create the necessary cathegorical levels and check the distribution of those levels.
+
+```{r}
+dyads_merged$dyadagelevels <- ifelse((dyads_merged$age1 == "05-10" & dyads_merged$age2 == "05-10") | 
+                                     (dyads_merged$age1 == "05-10" & dyads_merged$age2 == "10-15") |
+                                     (dyads_merged$age1 == "10-15" & dyads_merged$age2 == "05-10") |
+                                     (dyads_merged$age1 == "10-15" & dyads_merged$age2 == "10-15"), 
+                                   "young", 
+                                   ifelse(dyads_merged$age1 == "60-80" & dyads_merged$age2 == "60-80", 
+                                          "old", ifelse(is.na(dyads_merged$age1) | is.na(dyads_merged$age2), 
+                                                        "others", "others")))
+# dyads_merged$dyadagelevels <- as.factor(dyads_merged$dyadagelevels)
+print(table(dyads_merged$dyadagelevels) / 33)
+```
+
+
+Second, we choose the Kruskal-Wallis test as doesn't need the same number of data in the compared groups in contrast to the t-test. We wrangle the frame first to have the data in appriate shape for the test.
+
+```{r, message=FALSE}
+
+know_age <- dyads_merged %>% 
+  filter(!is.na(dyadagelevels)) %>%
+  group_by(dyad_ID, dyadagelevels) %>%
+  summarise(sum_know = sum(dyadknow), n= n()) # %>%
+  # group_by(dyadagelevels) %>%
+  # summarise(mean_know = mean(sum_know))
+
+know_age <- data.frame(know_age)
+kruskal.test(sum_know ~ dyadagelevels, data = know_age)
+```
+
+And third, we visualize the data in a boxplot to accompany the test result:
+
+```{r}
+ggplot() +
+  geom_boxplot(data = know_age, mapping = aes(x = dyadagelevels, y = sum_know, colour = dyadagelevels)) + 
+  labs(x = "dyad age level", y = "dyad plant knowledge", 
+       title = "boxplot of plant knowledge by age") +
+  theme_bw()
+```
+
+### Interpretation
+
+From the p-value in the Kruskal-Walis test one sees that age levels are a valid predictor for total plant knowledge. Furthermore, the boxplot implies that age positively corelates with plant knowledge, meaning that older people have more knowledge.
+
+## Sex
+
+### Analysis
+
+First, We apply the Kruskal-Wallis test again and wrangle the frame.
+
+```{r message = F}
+# exclude NAs
+know_sex <- dyads_merged %>% 
+  filter(dyadsex != "NANA") %>%
+  group_by(dyad_ID, dyadsex) %>%
+  summarise(sum_know = sum(dyadknow), n= n())
+
+kruskal.test(sum_know ~ dyadsex, data = know_sex)
+```
+
+And second, we compare the different levels visually:
+
+```{r}
+ggplot() +
+  geom_boxplot(data = know_sex, mapping = aes(x = dyadsex, y = sum_know, colour = dyadsex)) + 
+  labs(x = "dyad sex", y = "dyad plant knowledge", 
+       title = "boxplot of plant knowledge by sex") +
+  theme_bw()
+```
+
+### Interpretation
+
+From the p-value in the Kruskal-Walis test one sees that dyad sex is a valid predictor for total plant knowledge. Furthermore, the boxplot implies that men share more plant knowledge.
+
+# Camp
+
+## Analysis
+
+First, We apply the Kruskal-Wallis test again and wrangle the frame.
+
+```{r message=FALSE}
+dyads_merged$dyadcamp <- ifelse(dyads_merged$camp1 == dyads_merged$camp2, "same", "different")
+
+# how do I get rid of the NAs?
+know_camp <- dyads_merged %>% 
+  # filter(!is.na(dyadcamp)) %>%
+  group_by(dyad_ID, dyadcamp) %>%
+  summarise(sum_know = sum(dyadknow), n= n()) # %>%
+
+kruskal.test(sum_know ~ dyadcamp, data = know_camp)
+```
+
+And second, we compare the different levels visually:
+
+```{r}
+ggplot() +
+  geom_boxplot(data = know_camp, mapping = aes(x = dyadcamp, y = sum_know, colour = dyadcamp)) + 
+  labs(x = "dyad camp", y = "dyad plant knowledge", 
+       title = "boxplot of plant knowledge by camp") + 
+  theme_bw()
+```
+
+### Interpretation
+
+The Kruskal Walis test implies a significant relationship between camp and sum of shared knowledge. This result needs to be treated with care, because the boxplot implies little significance.
+
+# Regression analysis
+
+We will lose a logistic glm model and run separate logistic regressions (i.e. not controlling for pseudoreplication) to predict shared knowledge as a function of dyadic:
+
+* Age
+* Sex
+* Camp
+* A multiplicative model with age, sex and their interaction (age*sex)
+
+To start, we implement a function to convert the odds returned by `glm` to a probability. In principle getting probabilities out of a logistic regression is straightforward. We coefficients returned by the summaries are log-odds-ration, except for the baseline it is directly log-odds. To get the probability for any other level but baseline we simply add the log-odds-ration of the respective level.
+
+```{r}
+# column shared knowledge is called dyadknow
+# function to convert odds into probabilities
+odds2P <- function (odds){
+  return (odds / (1 + odds))
+}
+```
+
+## Age
+
+### Regression
+
+We build the model with one explanatory variable (age). Our baseline is "old" as it comes first in the alphabet.
+
+```{r}
+simplem_logreg_age <- glm(dyadknow ~ dyadagelevels, binomial, data = dyads_merged)
+summary(simplem_logreg_age)
+```
+
+### Analysis
+
+First, we rename the coefficient vector to access its values returned by the model more easily. Second, we extract the log-odds of the baseline provided by the model. And third, we calculate the log-odds of the other levels by adding the baseline odds.
+
+```{r}
+# coeficicents of model
+coef_age <- coef(simplem_logreg_age)
+names(coef_age) <- c("baseline", "others", "young")
+# odds baseline = old: P(know) / P(not know)
+odds_base <- exp(coef_age["baseline"])
+# odds ratios of who is more likely to know plant vs baseline
+ratio_other <- exp(coef_age["others"]) # others:old
+ratio_young <- exp(coef_age["young"]) # young:old
+# odds exposure groups: P(know) / P(not know)
+odds_others <- exp(coef_age["others"] + coef_age["baseline"])
+odds_young <- exp(coef_age["young"] + coef_age["baseline"])
+
+# probabilities that groups share knowledge
+odds_age <- c(odds2P(odds_others), odds2P(odds_young), odds2P(odds_base))
+names(odds_age) <- c("P(other share)", "P(young share)", "P(old share)")
+
+odds_age
+```
+
+### Interpretations
+
+The probability that knowledge is shared in a dyad rises with the age level and the p-value indicates that this relationship is significant.
+
+
+## Sex
+
+### Regression
+
+We build the model with one explanatory variable (sex). Our baseline is "Ff" as it comes first in the alphabet.
+
+```{r}
+simplem_logreg_sex <- glm(dyadknow ~ dyadsex, binomial, data = dyads_merged %>% filter(dyadsex != "NANA"))
+summary(simplem_logreg_sex)
+```
+
+### Analysis
+
+First, we rename the coefficient vector to access its values returned by the model more easily. Second, we extract the log-odds of the baseline provided by the model. And third, we calculate the log-odds of the other levels by adding the baseline odds.
+
+```{r}
+coef_sex <- coef(simplem_logreg_sex)[1:3] ; names(coef_sex) <- c("baseline", "FM", "MM")
+# odds baseline: P(know) / P(not know)
+odds_FF <- exp(coef_sex["baseline"])
+# odds ratios of who is more likely to know plant vs baseline
+ratio_FM <- exp(coef_sex["FM"]) # FM:FF
+ratio_MM <- exp(coef_sex["MM"]) # MM:FF
+# odds exposure groups: P(know) / P(not know)
+odds_FM <- exp(coef_sex["FM"] + coef_sex["baseline"])
+odds_MM <- exp(coef_sex["MM"] + coef_sex["baseline"])
+# probalities that groups shares knowledge
+odds_sex <- c(odds2P(odds_FF),odds2P(odds_FM), odds2P(odds_MM))
+names(odds_sex) <- c("P(FF share)", "P(FM share)", "P(MM share)")
+
+odds_sex
+```
+
+### Interpretation
+
+The probability that knowledge is shared rises when a man is part of the dyad.
+
+## Camp
+
+We repeat the workflow above for camp:
+
+### Regression
+```{r}
+simplem_logreg_camp <- glm(dyadknow ~ dyadcamp, binomial, data = dyads_merged)
+summary(simplem_logreg_camp)
+```
+
+### Analysis
+
+```{r}
+coef_camp <- coef(simplem_logreg_camp) ; names(coef_camp) <- c("baseline", "same")
+# odds baseline: P(know) / P(not know)
+odds_diff <- exp(coef_camp["baseline"])
+# odds ratios of who is more likely to know plant vs baseline
+ratio_sampe <- exp(coef_camp["same"]) # same:diff
+# odds exposure groups: P(know) / P(not know)
+odds_same <- exp(coef_camp["same"] + coef_camp["baseline"])
+
+# probalities that groups share knowledge
+odds_camp <- c(odds2P(odds_diff), odds2P(odds_same))
+names(odds_camp) <- c("P(different camp share)", "P(same camp share)")
+
+odds_camp
+```
+
+### Interpretation
+
+Camp doesn't seem to be a valid  predictor for shared knowledge because probability that knowledge is shared by people in same camp is similar to the one of dyads not belonging to the same camp.
+
+## Multiplicative
+
+Finally, we build a multiplicative model between age and sex to find out whether an interaction consideration provides additional information. We continue with the workflow above.
+
+### Regression
+
+```{r}
+simplem_logreg_agexsex <- glm(dyadknow ~ dyadagelevels * dyadsex, binomial, data = dyads_merged %>% filter(dyadsex != "NANA"))
+summary(simplem_logreg_agexsex)
+```
+
+### Analysis
+
+In a multiplicative model it can be quite cumbersome to calculate the probabilities of all the combinations. First, we identify our baseline which is oldFF. From there we slowly build up to higher complexity. 
+Calculating the probability of levels that differ from the baseline in only one explanatory variable are still intuitively calculatable. We simply add the log-odds ration of the respective level to the baseline. 
+However, for levels differing in two explanatory variables from the baseline we need to understand how the model calculated the log-odd ratios. It's like climbing up a stairway to the respective level, where the baseline is the bottom log-odds and every stair the log-odds-ration of a combination relative to the baseline. For instance, the log-odds for young and male-male dyads are calculated by adding the log-odds ratios of old, MM (MM differs from baseline) and young, FF (young differs from baseline). Next, we add the log odds ratio for young, MM, differing in two.
+
+```{r}
+# the baseline is oldFF
+coef_mult <- coef(simplem_logreg_agexsex)
+names(coef_mult) <-c("baseline",
+                     "othersFF",
+                     "youngFF", 
+                     "oldFM",
+                     "oldMM", 
+                     "othersFM",
+                     "youngFM",
+                     "othersMM", 
+                     "youngMM")
+
+# calculate probabilities
+odds_mul <- c(odds2P(exp(coef_mult["youngFF"] + coef_mult["baseline"])), 
+              odds2P(exp(coef_mult["othersFF"] + coef_mult["baseline"])), 
+              odds2P(exp(coef_mult["baseline"])),
+              odds2P(exp(coef_mult["oldFM"] + coef_mult["baseline"])),
+              odds2P(exp(coef_mult["oldMM"] + coef_mult["baseline"])), 
+              odds2P(exp(coef_mult["othersFM"] + coef_mult["oldFM"] +
+                         coef_mult["othersFF"] + coef_mult["baseline"])),
+              odds2P(exp(coef_mult["youngFM"] + coef_mult["youngFF"] + 
+                         coef_mult["oldFM"] + coef_mult["baseline"])),
+              odds2P(exp(coef_mult["othersMM"] + coef_mult["othersFF"] + 
+                         coef_mult["oldMM"] + coef_mult["baseline"])),
+              odds2P(exp(coef_mult["youngMM"] + coef_mult["youngFF"] + 
+                         coef_mult["oldMM"] + coef_mult["baseline"]))
+              
+              
+              )
+
+names(odds_mul) <- c("P(share young,FF)",
+                     "P(share other,FF)",
+                     "P(share old,FF)",
+                     "P(share old,FM)",
+                     "P(share old,MM)",
+                     "P(share others, FM)",
+                     "P(share young,FM)",
+                     "P(share others,MM)",
+                     "P(share young,MM)"
+                     )
+
+odds_mul
+```
+
+### Interpretation
+
+Because the interaction is not significant, we see that the probabilities for P(share young, FM) or P(share young, MM) do not differ significantly from the calculated P(share young, FF). In the same sense for P(share others, FF) and the combined probabilities for the two other age levels or all other possible combinations. This is the conceptual meaning for a non-significant interaction for logistic regression performed up on multiple levels! 
+
+## Optimization
+
+In closing we use the step function on a logistic model with all three explanatory variables to find out whether one can be droppend according to the AIC. 
+
+```{r}
+summary(step(glm(dyadknow ~ dyadagelevels + dyadsex + dyadcamp, binomial, data = dyads_merged %>% filter(dyadsex != "NANA"))))
+```
+
+The step function suggests that the best AIC is obtained if all features are kept in the model.
+
+# Mixed Effect Models
+
+Mixed Effect Models are proven to improve a models power as it included random effects along fixed effects. Here, we analyse the merged dyad data set with a mixed effect models of the levels:
+* age
+* sex
+* camp
+* multiplicative age and sex
+
+## Choice of random effect: learned from the same realtionship
+
+We choose the random effect on whether the dyad learned the plant from the degree of a relative.
+
+```{r}
+dyads_merged$samelearned <- ifelse(dyads_merged$learned1 == dyads_merged$learned2, 1, 0)
+# dyads_merged$sameborn <- ifelse(dyads_merged$born1 == dyads_merged$born2, 1, 0)
+# variance components analysis?
+```
+
+## Age
+
+We build the model including the random effect
+
+```{r}
+mixedm_logreg_age <- glmer(dyadknow ~ dyadagelevels + (1|samelearned), family = binomial, data = dyads_merged)
+summary(mixedm_logreg_age)
+```
+
+### Analysis
+
+As in the simple regression we extract and convert the model output to interpretable probabilities
+
+```{r}
+# coeficicents of model
+coef_age <- coef(mixedm_logreg_age)$samelearned[1,]; names(coef_age) <- c("baseline", "others", "young")
+# odds baseline = old: P(know) / P(not know)
+odds_base <- exp(coef_age["baseline"])
+# odds ratios of who is more likely to know plant vs baseline
+ratio_other <- exp(coef_age["others"]) # others:old
+ratio_young <- exp(coef_age["young"]) # young:old
+# odds exposure groups: P(know) / P(not know)
+odds_others <- exp(coef_age["others"] + coef_age["baseline"])
+odds_young <- exp(coef_age["young"] + coef_age["baseline"])
+
+# probabilities that groups share knowledge
+odds_age <- c(odds2P(odds_others), odds2P(odds_young), odds2P(odds_base))
+names(odds_age) <- c("P(other share)", "P(young share)", "P(old share)")
+
+odds_age
+```
+
+### Interpretetion
+
+Even though the chosen random effect doesn't explain a lot of variance in the data, the mixed model results in different probabilities than the simple regression. The probabilities are more certain and increase in ~ 1%. 
+
+
+## Sex
+
+```{r}
+mixedm_logreg_sex <- glmer(dyadknow ~ dyadsex + (1|samelearned), family = binomial, data = dyads_merged %>% filter(dyadsex != "NANA"))
+summary(mixedm_logreg_sex)
+```
+
+### Analysis
+
+```{r}
+coef_sex <- coef(mixedm_logreg_sex)$samelearned[1,] ; names(coef_sex) <- c("baseline", "FM", "MM")
+# odds baseline: P(know) / P(not know)
+odds_FF <- exp(coef_sex["baseline"])
+# odds ratios of who is more likely to know plant vs baseline
+ratio_FM <- exp(coef_sex["FM"]) # FM:FF
+ratio_MM <- exp(coef_sex["MM"]) # MM:FF
+# odds exposure groups: P(know) / P(not know)
+odds_FM <- exp(coef_sex["FM"] + coef_sex["baseline"])
+odds_MM <- exp(coef_sex["MM"] + coef_sex["baseline"])
+# probalities that groups shares knowledge
+odds_sex <- c(odds2P(odds_FF),odds2P(odds_FM), odds2P(odds_MM))
+names(odds_sex) <- c("P(FF share)", "P(FM share)", "P(MM share)")
+
+odds_sex
+```
+
+### Interpretation
+
+The random effect samelearned explains 3 times as much variability of differences in dyadsex as in dyadage, but still very little. Nevertheless, the probabilities increase again in ~1% on average, which means that the random effect led to gained certainty.
+
+
+## Camp
+
+```{r}
+mixedm_logreg_camp <- glmer(dyadknow ~ dyadcamp + (1|samelearned), family = binomial, data = dyads_merged)
+summary(mixedm_logreg_camp)
+```
+
+### Analysis
+
+```{r}
+coef_camp <- coef(mixedm_logreg_camp)$samelearned[1,] ; names(coef_camp) <- c("baseline", "same")
+# odds baseline: P(know) / P(not know)
+odds_diff <- exp(coef_camp["baseline"])
+# odds ratios of who is more likely to know plant vs baseline
+ratio_sampe <- exp(coef_camp["same"]) # same:diff
+# odds exposure groups: P(know) / P(not know)
+odds_same <- exp(coef_camp["same"] + coef_camp["baseline"])
+# probalities that groups share knowledge
+odds_camp <- c(odds2P(odds_diff), odds2P(odds_same))
+names(odds_camp) <- c("P(different camp share)", "P(same camp share)")
+
+odds_camp
+```
+
+
+## Multiplicative
+
+```{r warning = FALSE}
+mixedm_logreg_agexsex <- glmer(dyadknow ~ dyadagelevels * dyadsex + (1|samelearned), family = binomial, data = dyads_merged %>% filter(dyadsex != "NANA"))
+summary(mixedm_logreg_agexsex)
+```
+
+### Analysis
+
+In a multiplicative model it can be quite cumbersome to calculate the probabilities of all the combinations. First, we identify our baseline which is oldFF. From there we slowly build up to higher complexity. 
+Calculating the probability of levels that differ from the baseline in only one explanatory variable are still intuitively calculatable. We simply add the log-odds ration of the respective level to the baseline. 
+However, for levels differing in two explanatory variables from the baseline we need to understand how the model calculated the log-odd ratios. It's like climbing up a stairway to the respective level, where the baseline is the bottom log-odds and every stair the log-odds-ration of a combination relative to the baseline. For instance, the log-odds for young and male-male dyads are calculated by adding the log-odds ratios of old, MM (MM differs from baseline) and young, FF (young differs from baseline). Next, we add the log odds ratio for young, MM, differing in two.
+
+```{r}
+# the baseline is oldFF
+coef_mult <- coef(mixedm_logreg_agexsex)$samelearned[1,] # the baseline is oldFF
+
+names(coef_mult) <-c("baseline",
+                     "othersFF",
+                     "youngFF", 
+                     "oldFM",
+                     "oldMM", 
+                     "othersFM",
+                     "youngFM",
+                     "othersMM", 
+                     "youngMM")
+
+# calculate probabilities
+odds_mul <- c(odds2P(exp(coef_mult["youngFF"] + coef_mult["baseline"])), 
+              odds2P(exp(coef_mult["othersFF"] + coef_mult["baseline"])), 
+              odds2P(exp(coef_mult["baseline"])),
+              odds2P(exp(coef_mult["oldFM"] + coef_mult["baseline"])),
+              odds2P(exp(coef_mult["oldMM"] + coef_mult["baseline"])), 
+              odds2P(exp(coef_mult["othersFM"] + coef_mult["oldFM"] +
+                         coef_mult["othersFF"] + coef_mult["baseline"])),
+              odds2P(exp(coef_mult["youngFM"] + coef_mult["youngFF"] + 
+                         coef_mult["oldFM"] + coef_mult["baseline"])),
+              odds2P(exp(coef_mult["othersMM"] + coef_mult["othersFF"] + 
+                         coef_mult["oldMM"] + coef_mult["baseline"])),
+              odds2P(exp(coef_mult["youngMM"] + coef_mult["youngFF"] + 
+                         coef_mult["oldMM"] + coef_mult["baseline"]))
+              
+              
+              )
+
+names(odds_mul) <- c("P(share young,FF)",
+                     "P(share other,FF)",
+                     "P(share old,FF)",
+                     "P(share old,FM)",
+                     "P(share old,MM)",
+                     "P(share others, FM)",
+                     "P(share young,FM)",
+                     "P(share others,MM)",
+                     "P(share young,MM)"
+                     )
+
+odds_mul
+```
+
+### Interpretation
+
+The random effect had a significant effect on the model even though it explains little variance amount. The interaction terms are now classified as significant, which means that for example P(share young,FM) does vary significantly from P(share old,FF) and P(others, FF). Thus, the random effect gave the model more explanatory power and certainty. 
+
+
+# Conclusion
+
+Overall, the result seems to be coherent over the analysis through basic test and boxplots over simple logistic regression to the mixed regression models. The hypothesis resulting from exploring the data in 4) are confirmed in the built model of 5) and 6). 
+From the simple model it becomes clear that sex and age are valid predictors for shared plant knowledge, since probability of shared knowledge in dyads increase with age or fraction of males in the dyad. However, being in the same camp doesn't increase the probability for sharing knowledge.
+General trends are that the models with interactions show lower AICs and thus have greater explanatory power than single-level ones. Moreover, in the mixed models, the random effect describing the shared source of learnt content brings more certainty in the probabilities and further lowers the AIC in the model. Thus, the model with the greatest explanatory power is the one of 6e), a two level mixed effect model.
+From the probabilities resutling from the single level models I would rank the factors in importance as follows: 1. age, 2. sex and 3. camp.
+
+
